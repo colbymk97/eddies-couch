@@ -1,0 +1,118 @@
+:root {
+  --bg: #f4efe6;
+  --wall: #f3dfc1;
+  --floor: #be9c76;
+  --couch: #4d7ea8;
+  --couch-dark: #3f6788;
+  --frame: #8b5a2b;
+  --accent: #f4b266;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: #222;
+}
+
+.page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+h1, h2 { margin-bottom: 0.4rem; }
+.subtitle { margin-top: 0; color: #444; }
+
+.room {
+  position: relative;
+  height: 360px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid #8d7356;
+  margin: 1rem 0 1.5rem;
+  background: linear-gradient(var(--wall) 0 68%, var(--floor) 68% 100%);
+}
+
+.portrait { position: absolute; left: 70px; top: 38px; text-align: center; cursor: pointer; }
+.frame {
+  width: 110px; height: 140px; background: var(--frame); padding: 8px; border-radius: 4px;
+  box-shadow: 0 4px 0 #6f4621;
+}
+.dog-face { position: relative; width: 100%; height: 100%; background: #efe8dc; border: 2px solid #333; }
+.ear { position: absolute; top: 18px; width: 18px; height: 30px; background: #5f3b1d; border-radius: 50%; }
+.ear.left { left: 14px; } .ear.right { right: 14px; }
+.eye { position: absolute; top: 44px; width: 7px; height: 7px; background: #000; border-radius: 50%; }
+.eye.left { left: 34px; } .eye.right { right: 34px; }
+.nose { position: absolute; bottom: 34px; left: 50%; transform: translateX(-50%); width: 14px; height: 10px; background: #000; border-radius: 50%; }
+
+.couch {
+  position: absolute;
+  bottom: 42px;
+  left: 220px;
+  width: 430px;
+  height: 150px;
+  background: var(--couch);
+  border-radius: 18px;
+  box-shadow: inset 0 -16px var(--couch-dark);
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+.couch:active { transform: translateY(2px); }
+.cushion {
+  position: absolute;
+  bottom: 30px;
+  width: 120px;
+  height: 74px;
+  border-radius: 10px;
+  background: #6e9ec8;
+  border: 2px solid #3f6788;
+}
+.c1 { left: 22px; } .c2 { left: 154px; } .c3 { left: 286px; }
+
+.trash { position: absolute; right: 78px; bottom: 48px; width: 100px; height: 150px; cursor: pointer; }
+.can {
+  position: absolute; bottom: 0; width: 100px; height: 110px;
+  background: linear-gradient(90deg, #9ca3ab, #c8ced5, #9aa2aa);
+  border-radius: 10px 10px 20px 20px;
+}
+.bun {
+  position: absolute;
+  width: 44px;
+  height: 24px;
+  background: #e6b56e;
+  border: 2px solid #ca9143;
+  border-radius: 999px;
+  transform-origin: center;
+}
+.bun1 { left: 8px; bottom: 100px; transform: rotate(-20deg); }
+.bun2 { left: 33px; bottom: 112px; transform: rotate(8deg); }
+.bun3 { left: 52px; bottom: 96px; transform: rotate(24deg); }
+
+.game, .deploy {
+  background: #fff;
+  border: 1px solid #d7cab8;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.choices { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+button {
+  border: 1px solid #876746;
+  border-radius: 8px;
+  background: #fff7ed;
+  padding: 0.55rem 0.8rem;
+  cursor: pointer;
+}
+button:hover { background: #ffefd9; }
+
+.shake { animation: shake 320ms linear; }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
+.dimmed { filter: grayscale(0.9); opacity: 0.45; }

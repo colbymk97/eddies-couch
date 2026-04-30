@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eddie's Couch</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <h1>Eddie's Couch of Consequences</h1>
+      <p class="subtitle">Click stuff in the room, then play the text adventure below.</p>
+
+      <section class="room" aria-label="Cartoon room with couch, trash can and dog portrait">
+        <div class="wall"></div>
+        <div class="portrait" id="portrait" role="button" tabindex="0" aria-label="Dog portrait">
+          <div class="frame">
+            <div class="dog-face">
+              <span class="ear left"></span>
+              <span class="ear right"></span>
+              <span class="eye left"></span>
+              <span class="eye right"></span>
+              <span class="nose"></span>
+            </div>
+          </div>
+          <p>Sir Borkington</p>
+        </div>
+
+        <div class="couch" id="couch" role="button" tabindex="0" aria-label="Couch">
+          <div class="cushion c1"></div>
+          <div class="cushion c2"></div>
+          <div class="cushion c3"></div>
+        </div>
+
+        <div class="trash" id="trash" role="button" tabindex="0" aria-label="Trash can with hotdog buns">
+          <div class="can"></div>
+          <div class="bun bun1"></div>
+          <div class="bun bun2"></div>
+          <div class="bun bun3"></div>
+        </div>
+      </section>
+
+      <section class="game">
+        <h2>Hotdog Bun Adventure (PG-13 Edition)</h2>
+        <p id="story">You are Eddie. You found mysterious hotdog buns by the couch. Legend says every selfish act drains a dog's luck.</p>
+        <div id="status">Dog luck: <strong id="dogLuck">3</strong> 🐶</div>
+        <div class="choices">
+          <button data-choice="snack">Eat a bun like a normal person</button>
+          <button data-choice="hoard">Hoard all buns for yourself</button>
+          <button data-choice="apology">Apologize to the dog portrait</button>
+          <button data-choice="reset">Restart game</button>
+        </div>
+      </section>
+
+      <section class="deploy">
+        <h2>Publish to GitHub Pages</h2>
+        <ol>
+          <li>Create a new GitHub repo and push this code.</li>
+          <li>In GitHub: <strong>Settings → Pages</strong>.</li>
+          <li>Under <strong>Build and deployment</strong>, choose <strong>Deploy from a branch</strong>.</li>
+          <li>Select <strong>main</strong> branch and <strong>/ (root)</strong>, then Save.</li>
+          <li>Your site appears at: <code>https://YOUR-USERNAME.github.io/YOUR-REPO/</code></li>
+        </ol>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
