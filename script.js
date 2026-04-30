@@ -22,6 +22,9 @@ function bounce(el) {
   });
 });
 
+const intro =
+  'You are Eddie, a 35-year-old man living with your girlfriend in a weird apartment full of unresolved vibes. She has a mysterious traumatic history involving dogs and hotdog buns. Your serious best friend Zach keeps warning you to get your act together. Your troubled but well-meaning friend Colby says, “maybe don\'t do cursed stuff on the couch tonight.”';
+
 document.querySelector('.choices').addEventListener('click', (e) => {
   const button = e.target.closest('button');
   if (!button) return;
@@ -30,14 +33,14 @@ document.querySelector('.choices').addEventListener('click', (e) => {
 
   if (choice === 'reset') {
     dogLuck = 3;
-    story.textContent = 'You are Eddie. You found mysterious hotdog buns by the couch. Legend says every selfish act drains a dog\'s luck.';
+    story.textContent = intro;
     portrait.classList.remove('dimmed');
     dogLuckEl.textContent = String(dogLuck);
     return;
   }
 
   if (choice === 'snack') {
-    story.textContent = 'You eat one bun responsibly. The universe approves. Sir Borkington remains majestic.';
+    story.textContent = 'You make a normal snack. Zach nods in approval. Colby looks relieved. Your girlfriend says this is the first sane bun decision she has seen in years.';
     return;
   }
 
@@ -48,9 +51,9 @@ document.querySelector('.choices').addEventListener('click', (e) => {
 
     if (dogLuck <= 0) {
       portrait.classList.add('dimmed');
-      story.textContent = 'Dog luck hit zero. The portrait sighs dramatically. Moral: do not hoard buns.';
+      story.textContent = 'You ignore Zach, ignore Colby, and privately relapse into your bizarre hotdog-bun masturbation ritual. Dog luck hits zero, and the portrait goes gray like a cursed warning.';
     } else {
-      story.textContent = `You hoard buns. Cosmic penalty! Dog luck drops to ${dogLuck}.`;
+      story.textContent = `You sneak off for another awkward hotdog-bun session. Zach calls you out. Colby tries to help. Dog luck drops to ${dogLuck}.`;
     }
     return;
   }
@@ -60,9 +63,11 @@ document.querySelector('.choices').addEventListener('click', (e) => {
       dogLuck += 1;
       dogLuckEl.textContent = String(dogLuck);
       portrait.classList.remove('dimmed');
-      story.textContent = `You apologize sincerely. Dog luck restores to ${dogLuck}.`;
+      story.textContent = `You confess everything to your girlfriend, Zach, and Colby. It is painful but honest. Dog luck restores to ${dogLuck}.`;
     } else {
-      story.textContent = 'You apologize preemptively. The portrait nods with cautious respect.';
+      story.textContent = 'You preemptively apologize to everyone, including the portrait. Zach says that is progress. Colby claps once.';
     }
   }
 });
+
+story.textContent = intro;
