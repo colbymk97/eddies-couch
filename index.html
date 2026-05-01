@@ -8,59 +8,22 @@
   </head>
   <body>
     <main class="page">
-      <h1>Eddie's Couch of Consequences</h1>
-      <p class="subtitle">Click stuff in the room, then play the text adventure below.</p>
+      <h1>Eddie's Couch</h1>
+      <p class="subtitle">Static scene image plus story text. Mobile-friendly layout.</p>
 
-      <section class="room" aria-label="Cartoon room with couch, trash can and dog portrait">
-        <div class="wall"></div>
-        <div class="portrait" id="portrait" role="button" tabindex="0" aria-label="Dog portrait">
-          <div class="frame">
-            <div class="dog-face">
-              <span class="ear left"></span>
-              <span class="ear right"></span>
-              <span class="eye left"></span>
-              <span class="eye right"></span>
-              <span class="nose"></span>
-            </div>
-          </div>
-          <p>Sir Borkington</p>
-        </div>
-
-        <div class="couch" id="couch" role="button" tabindex="0" aria-label="Couch">
-          <div class="cushion c1"></div>
-          <div class="cushion c2"></div>
-          <div class="cushion c3"></div>
-        </div>
-
-        <div class="trash" id="trash" role="button" tabindex="0" aria-label="Trash can with hotdog buns">
-          <div class="can"></div>
-          <div class="bun bun1"></div>
-          <div class="bun bun2"></div>
-          <div class="bun bun3"></div>
-        </div>
-      </section>
+      <figure class="scene-wrap">
+        <img src="scene.svg" alt="Living room with couch, trash can full of hotdog buns, dog portrait, and microwave" />
+      </figure>
 
       <section class="game">
-        <h2>Hotdog Bun Adventure (Adult Chaos Edition)</h2>
-        <p id="story">You are Eddie, a 35-year-old man living with your girlfriend. She has a mysterious traumatic history involving dogs and hotdog buns. Zach and Colby both told you not to make tonight weird.</p>
-        <div id="status">Dog luck: <strong id="dogLuck">3</strong> 🐶</div>
+        <h2>Story</h2>
+        <p id="story"></p>
         <div class="choices">
-          <button data-choice="snack">Eat a bun like a normal person</button>
-          <button data-choice="hoard">Do the cursed private bun ritual</button>
-          <button data-choice="apology">Apologize to the dog portrait</button>
-          <button data-choice="reset">Restart game</button>
+          <button data-choice="intro">Scene 1</button>
+          <button data-choice="act">Scene 2</button>
+          <button data-choice="result">Scene 3</button>
+          <button data-choice="friends">Scene 4</button>
         </div>
-      </section>
-
-      <section class="deploy">
-        <h2>Publish to GitHub Pages</h2>
-        <ol>
-          <li>Create a new GitHub repo and push this code.</li>
-          <li>In GitHub: <strong>Settings → Pages</strong>.</li>
-          <li>Under <strong>Build and deployment</strong>, choose <strong>Deploy from a branch</strong>.</li>
-          <li>Select <strong>main</strong> branch and <strong>/ (root)</strong>, then Save.</li>
-          <li>Your site appears at: <code>https://YOUR-USERNAME.github.io/YOUR-REPO/</code></li>
-        </ol>
       </section>
     </main>
 
