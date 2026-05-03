@@ -2,31 +2,58 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="A low-poly Three.js chase game about completing every couch before Eddie catches you."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <title>Eddie's Couch</title>
-    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="page">
-      <h1>Eddie's Couch</h1>
-      <p class="subtitle">Static scene image plus story text. Mobile-friendly layout.</p>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Eddie's Couch game scene"></canvas>
 
-      <figure class="scene-wrap">
-        <img src="scene.svg" alt="Living room with couch, trash can full of hotdog buns, dog portrait, and microwave" />
-      </figure>
-
-      <section class="game">
-        <h2>Story</h2>
-        <p id="story"></p>
-        <div class="choices">
-          <button data-choice="intro">Scene 1</button>
-          <button data-choice="act">Scene 2</button>
-          <button data-choice="result">Scene 3</button>
-          <button data-choice="friends">Scene 4</button>
+      <div id="hud" class="hud">
+        <div class="hud__panel">
+          <div class="hud__label">Couches</div>
+          <div id="objective" class="hud__value">0 / 5</div>
         </div>
-      </section>
-    </main>
+        <div class="hud__panel hud__panel--wide">
+          <div class="hud__label">Target</div>
+          <div id="target" class="hud__value">Find a clean seat</div>
+        </div>
+        <div class="hud__panel">
+          <div class="hud__label">Vomit</div>
+          <div id="cooldown" class="hud__value">Ready</div>
+        </div>
+      </div>
 
-    <script src="script.js"></script>
+      <div id="shout" class="shout" aria-live="polite"></div>
+
+      <div id="mobile-controls" class="mobile-controls" aria-hidden="true">
+        <div id="joystick" class="joystick">
+          <div id="joystick-knob" class="joystick__knob"></div>
+        </div>
+        <button id="vomit-button" class="vomit-button" type="button">Vomit</button>
+      </div>
+
+      <div id="rotate" class="rotate-prompt">
+        <div class="rotate-prompt__mark">↻</div>
+        <div>Rotate to landscape</div>
+      </div>
+
+      <div id="overlay" class="overlay">
+        <div class="overlay__box">
+          <h1>Eddie's Couch</h1>
+          <p>
+            Help Theo hit every couch seat before Eddie catches him. Watch the hotdog buns.
+          </p>
+          <button id="start-button" type="button">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
