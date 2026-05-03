@@ -189,6 +189,7 @@ let gameState: 'ready' | 'playing' | 'won' | 'lost' = 'ready';
 let vomitCooldown = 0;
 let shoutTimer = 0;
 let elapsed = 0;
+let caughtAt = 0;
 let audioContext: AudioContext | undefined;
 
 const player: Player = {
@@ -536,6 +537,15 @@ function createEddie() {
     group.add(leg);
   }
 
+  for (const side of [-1, 1]) {
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.58, 0.15), skin);
+    arm.name = side < 0 ? 'eddieLeftArm' : 'eddieRightArm';
+    arm.position.set(side * 0.43, 1.06, 0.02);
+    arm.rotation.z = side * 0.32;
+    arm.castShadow = true;
+    group.add(arm);
+  }
+
   return group;
 }
 
@@ -648,6 +658,8 @@ function tick(timestamp?: number) {
     updatePlayer(delta);
     updateEddie(delta);
     updateTargetText();
+  } else if (gameState === 'lost') {
+    animateCaughtScolding();
   }
 
   animateSplats(delta);
@@ -1125,18 +1137,21 @@ function winGame() {
 
 function loseGame() {
   gameState = 'lost';
+  caughtAt = elapsed;
   document.exitPointerLock?.();
+  poseCaughtScene();
   overlayEl.classList.remove('is-hidden');
   overlayEl.querySelector('h1')!.textContent = 'Eddie Got You';
-  overlayEl.querySelector('p')!.textContent = 'He caught Theo before the couch mission was complete.';
+  overlayEl.querySelector('p')!.textContent = 'Eddie caught Theo and gave him a stern couch-crime timeout.';
   startButton.textContent = 'Try Again';
-  showShout('¡Te agarré!');
+  showShout('¡No, Theo! Bad couch choice!');
 }
 
 function restartGame() {
   gameState = 'ready';
   vomitCooldown = 0;
   shoutTimer = 0;
+  caughtAt = 0;
   player.position.set(0, 0, 0.4);
   eddie.position.set(...level.eddieSpawn);
   eddie.active = false;
@@ -1177,6 +1192,51 @@ function restartGame() {
   updateHud();
   player.mesh.position.copy(player.position);
   eddie.mesh.position.copy(eddie.position);
+  resetCaughtPose();
+}
+
+function poseCaughtScene() {
+  const forward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+  eddie.active = true;
+  eddie.mesh.visible = true;
+  eddie.position.copy(player.position).add(forward.multiplyScalar(0.78));
+  eddie.mesh.position.copy(eddie.position);
+
+  const toTheo = player.position.clone().sub(eddie.position);
+  eddie.mesh.rotation.y = Math.atan2(toTheo.x, toTheo.z);
+  player.mesh.rotation.y = eddie.mesh.rotation.y + Math.PI;
+}
+
+function animateCaughtScolding() {
+  const age = elapsed - caughtAt;
+  const wag = Math.sin(age * 16) * 0.55;
+  const bounce = Math.abs(Math.sin(age * 8)) * 0.035;
+  eddie.mesh.position.y = bounce;
+  player.mesh.position.y = Math.sin(age * 13) * 0.012;
+
+  const rightArm = eddie.mesh.getObjectByName('eddieRightArm');
+  const leftArm = eddie.mesh.getObjectByName('eddieLeftArm');
+  if (rightArm) {
+    rightArm.rotation.z = -1.15 + wag;
+    rightArm.rotation.x = -0.35;
+  }
+  if (leftArm) {
+    leftArm.rotation.z = -0.15;
+    leftArm.rotation.x = 0.15;
+  }
+}
+
+function resetCaughtPose() {
+  const rightArm = eddie.mesh.getObjectByName('eddieRightArm');
+  const leftArm = eddie.mesh.getObjectByName('eddieLeftArm');
+  if (rightArm) {
+    rightArm.rotation.set(0, 0, 0.32);
+  }
+  if (leftArm) {
+    leftArm.rotation.set(0, 0, -0.32);
+  }
+  player.mesh.position.y = 0;
+  eddie.mesh.position.y = 0;
 }
 
 function setupTouchControls() {
@@ -1262,7 +1322,7 @@ function setupTouchControls() {
     const direction = delta.length() > 0 ? delta.normalize() : delta;
     const knob = direction.clone().multiplyScalar(length);
 
-    mobileMove.set(knob.x / limit, -knob.y / limit);
+    mobileMove.set(-knob.x / limit, -knob.y / limit);
     joystickKnobEl.style.transform = `translate(calc(-50% + ${knob.x}px), calc(-50% + ${knob.y}px))`;
   }
 }
