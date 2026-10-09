@@ -1,7 +1,13 @@
 import { LineDeck } from '../core/util';
 
 export const EDDIE = {
-  snore: new LineDeck(['Zzz... buns... zzz', 'mmm... sectional...', 'zzz... no, Theo... zzz', 'zzz... Scotchgard... zzz', '*snort* ...cupholders...']),
+  snore: new LineDeck([
+    'Zzz... buns... zzz',
+    'mmm... sectional...',
+    'zzz... no, Theo... zzz',
+    'zzz... Biscuit, no... drop the bun... zzz',
+    '*snort* ...cupholders...',
+  ]),
   wake: new LineDeck(['¿¡QUÉ FUE ESO!?', 'Who is in my living room?!', '*snort* ...was that a SPLAT?']),
   alarm: new LineDeck(['Nap over. Couch patrol.', 'Okay. Time to check on my babies.']),
   spot: new LineDeck([
@@ -25,6 +31,13 @@ export const EDDIE = {
     'TIMEOUT! You are getting a TIMEOUT!',
     'Do you know what these couches MEAN to me?!',
     'Stop hurling and start crawling... AWAY!',
+    'Do NOT eat my buns! Remember what happened to Biscuit!',
+    'Those buns are NOT for eating, Theo!',
+  ]),
+  buns: new LineDeck([
+    'NOT THE BUNS! THINK OF BISCUIT!',
+    'Spit it out! You do NOT know where that bun has been!',
+    'Biscuit ate one of those and look what happened!',
   ]),
   lost: new LineDeck(['¿Dónde estás, mijo...?', 'I can smell you. You smell like buns.', 'Okay. Deep breaths, Eddie.', 'He went... somewhere. Ugh.']),
   investigate: new LineDeck(['¿Hola...?', 'That better not be what I think it is...', 'Was that... a splort?', 'I heard a gurgle.', 'Something smells... chunky.']),
@@ -40,7 +53,7 @@ export const EDDIE = {
   slip: new LineDeck(['WHOA-WHOA-WHOA—', '¡AY, MI ESPALDA!', 'Not again...', 'Who put that THERE?!']),
   catch: new LineDeck(['¡TE TENGO!', 'GOTCHA, you little sprinkler!', 'Timeout. NOW.', 'Caught you, chunky!']),
   pukedOn: new LineDeck(['...', '...he got me in the mouth.', '¡ASQUEROSO!', 'I need a minute. And a shower. And therapy.']),
-  squeak: new LineDeck(['¿Biscuit? Is that you, buddy?', 'Who is squeaking?!', '...Biscuit?']),
+  squeak: new LineDeck(['¿Biscuit? Is that you, buddy?', '...Biscuit? No. Biscuit is gone. The bun took him.', 'Who is squeaking?!']),
   beast: 'THAT IS IT. NO MORE MR. NICE EDDIE.',
   rage: new LineDeck(['I am getting VERY upset!', 'My blood pressure!!', 'I need a bigger spray bottle.']),
 };
@@ -59,7 +72,8 @@ export const POP = {
 };
 
 export const TIPS = [
-  'Eddie owns 400 hotdog buns. He has never owned a hotdog.',
+  'Eddie owns 400 hotdog buns. He has never owned a hotdog. Biscuit knew why. Biscuit is no longer with us.',
+  'Never eat a bun from Eddie\'s room. Ask Biscuit. Actually, you can\'t.',
   'Missed shots leave puddles. Eddie slips on puddles.',
   'Hold to charge a MEGA HURL. It can soak several seats at once.',
   'Eddie scrubs half-puked couches clean. Finish what you start.',
@@ -79,7 +93,7 @@ export interface Rank {
 }
 
 export const RANKS: Rank[] = [
-  { min: 16000, grade: 'S', title: 'SOFA KING', blurb: 'Eddie has moved into a hammock. Permanently.' },
+  { min: 16000, grade: 'S', title: 'SOFA KING', blurb: 'Eddie has moved into a hammock. Biscuit is avenged.' },
   { min: 12000, grade: 'A', title: 'COUCH POTENTATE', blurb: "Eddie's upholstery guy just bought a boat." },
   { min: 8500, grade: 'B', title: 'UPHOLSTERY TERRORIST', blurb: 'The dogs in the portraits are proud of you.' },
   { min: 5000, grade: 'C', title: 'CUSHION CRUSHER', blurb: 'Respectable carnage. Eddie will need a minute.' },

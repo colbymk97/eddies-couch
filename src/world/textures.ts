@@ -630,7 +630,9 @@ export interface DogStyle {
   name: string;
   fur: string;
   ear: 'floppy' | 'pointy' | 'fluffy';
-  outfit: 'ruff' | 'military' | 'crown' | 'pearls' | 'bowtie' | 'monocle';
+  outfit: 'ruff' | 'military' | 'crown' | 'pearls' | 'bowtie' | 'monocle' | 'halo';
+  /** Hangs with a black mourning ribbon. */
+  memorial?: boolean;
   bg: string;
   spot?: string;
 }
@@ -661,6 +663,17 @@ export function dogPortraitTexture(dog: DogStyle) {
     const headY = h * 0.4;
 
     // Body / outfit.
+    if (dog.outfit === 'halo') {
+      // Little angel wings.
+      ctx.fillStyle = 'rgba(255,255,255,0.92)';
+      for (const side of [-1, 1]) {
+        for (let f = 0; f < 3; f += 1) {
+          ctx.beginPath();
+          ctx.ellipse(cx + side * (118 + f * 14), h * 0.8 - f * 22, 46 - f * 8, 20, side * (0.5 + f * 0.25), 0, TAU);
+          ctx.fill();
+        }
+      }
+    }
     ctx.fillStyle = dog.fur;
     ctx.beginPath();
     ctx.ellipse(cx, h * 0.92, 130, 110, 0, 0, TAU);
@@ -822,6 +835,16 @@ export function dogPortraitTexture(dog: DogStyle) {
       ctx.beginPath();
       ctx.arc(cx, headY - 88, 7, 0, TAU);
       ctx.fill();
+    }
+    if (dog.outfit === 'halo') {
+      ctx.strokeStyle = '#ffe27a';
+      ctx.lineWidth = 9;
+      ctx.shadowColor = '#fff3b0';
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.ellipse(cx, headY - 112, 54, 15, 0, 0, TAU);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
     }
     if (dog.outfit === 'monocle') {
       ctx.strokeStyle = '#f2c94c';

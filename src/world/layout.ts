@@ -273,5 +273,5 @@ export const PORTRAITS: (DogStyle & { wall: 'hallWest' | 'hallEast'; z: number }
   { wall: 'hallEast', z: -6.3, name: 'PRINCESS NOODLE', fur: '#fff4e0', ear: 'fluffy', outfit: 'crown', bg: '#5b3b6b' },
   { wall: 'hallEast', z: -0.2, name: 'MR. PANCAKES', fur: '#d9a066', ear: 'floppy', outfit: 'bowtie', bg: '#2a4b5b' },
   { wall: 'hallEast', z: 2.8, name: 'BEANS, ESQ.', fur: '#6b4a2e', ear: 'pointy', outfit: 'monocle', bg: '#3a3a2a' },
-  { wall: 'hallEast', z: 7.6, name: 'CHUNK THE GREAT', fur: '#a8a8a8', ear: 'floppy', outfit: 'crown', bg: '#2a3b5b', spot: '#555555' },
+  { wall: 'hallEast', z: 7.6, name: 'BISCUIT (R.I.P.)', fur: '#c98f52', ear: 'floppy', outfit: 'halo', bg: '#4a3a6b', memorial: true },
 ];

@@ -288,6 +288,7 @@ export class PropBuilder {
       [['DO NOT', 'EAT MY', 'BUNS', '- E'], '#fff59d', 0.05, 1.1, 0.12],
       [['BUY:', 'BUNS', 'BUNS', 'BUNS'], '#ffcdd2', 0.24, 0.72, -0.1],
       [['NO', 'PUKE', 'ZONE'], '#c8e6c9', 0.12, 1.65, 0.06],
+      [['DOGS:', 'NO BUNS.', 'EVER.'], '#bbdefb', -0.13, 0.6, 0.08],
     ];
     for (const [lines, color, nx, ny, r] of notes) {
       const tex = textLabelTexture(lines, { width: 192, height: 192, bg: color, fg: '#333', size: 34, font: BODY_FONT });
@@ -562,6 +563,30 @@ export class PropBuilder {
     mesh(cylGeo(0.42, 0.42, 0.08, 28), std(0xd8c2a4, { roughness: 0.95 }), 0, 0.06, 0, { parent: g });
     const tag = textLabelTexture(['BISCUIT'], { width: 256, height: 64, bg: '#c0392b', fg: '#fff', size: 40 });
     mesh(new THREE.PlaneGeometry(0.4, 0.1), std(0xffffff, { map: tag }), 0, 0.2, 0.56, { parent: g, cast: false });
+    // The empty bed is now a shrine.
+    const plaque = textLabelTexture(['R.I.P. BISCUIT', 'He ate the', 'wrong bun.'], {
+      width: 256,
+      height: 200,
+      bg: '#fdf6e3',
+      fg: '#3b2a20',
+      size: 36,
+      border: '#c99a32',
+    });
+    const easel = new THREE.Group();
+    easel.position.set(0, 0, 0.78);
+    easel.rotation.y = Math.PI;
+    g.add(easel);
+    mesh(roundedBoxGeo(0.74, 0.58, 0.03, 0.012), shared.gold, 0, 0.5, 0, { rx: -0.2, parent: easel });
+    mesh(new THREE.PlaneGeometry(0.67, 0.51), std(0xffffff, { map: plaque, roughness: 0.8 }), 0, 0.5, 0.018, { rx: -0.2, parent: easel, cast: false });
+    mesh(cylGeo(0.014, 0.014, 0.6, 6), shared.darkWood, 0, 0.28, -0.16, { rx: 0.35, parent: easel });
+    for (const cx of [-0.42, 0.42]) {
+      mesh(cylGeo(0.045, 0.05, 0.16, 14), std(0xfff6e0, { roughness: 0.6 }), cx, 0.08, 0.62, { parent: g });
+      mesh(sphereGeo(0.025, 8, 6), std(0xffffff, { emissive: 0xffb347, emissiveIntensity: 4 }), cx, 0.19, 0.62, { parent: g, cast: false }).scale.y = 1.6;
+    }
+    for (let i = 0; i < 5; i += 1) {
+      const a = -0.9 + i * 0.45;
+      mesh(sphereGeo(0.04, 8, 6), std([0xff6b81, 0xffffff, 0xfff176][i % 3]), Math.sin(a) * 0.62, 0.05, Math.cos(a) * 0.62 - 0.05, { parent: g, cast: false });
+    }
     g.add(blobShadow(this.shadow, 1.3, 1.3, 0.35));
   }
 
@@ -633,6 +658,17 @@ export class PropBuilder {
     // Picture light.
     mesh(cylGeo(0.025, 0.025, 0.4, 10), shared.brass, 0, y + ph / 2 + frameW + 0.1, 0.12, { rz: Math.PI / 2, parent: g, cast: false });
     mesh(boxGeo(0.38, 0.015, 0.03), std(0xffffff, { emissive: 0xfff0c0, emissiveIntensity: 2 }), 0, y + ph / 2 + frameW + 0.08, 0.12, { parent: g, cast: false });
+
+    if (dog.memorial) {
+      // Black mourning ribbon across the top corner of the frame.
+      const ribbon = std(0x121014, { roughness: 0.6 });
+      for (const [rx, ry, rr] of [
+        [0.22, y + ph / 2 - 0.02, -0.75],
+        [0.3, y + ph / 2 + 0.06, -0.75],
+      ]) {
+        mesh(boxGeo(0.34, 0.05, 0.02), ribbon, rx, ry, 0.07, { rz: rr, parent: g, cast: false });
+      }
+    }
 
     const pupilMat = std(0x0e0a08, { roughness: 0.2 });
     const pupils: THREE.Mesh[] = [];

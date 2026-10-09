@@ -1047,7 +1047,7 @@ export class Game {
     $('end-kicker').textContent = won ? (isBest ? 'New best score!' : 'Victory') : isBest ? 'New best score!' : 'Game over';
     $('end-title').textContent = won ? 'Couchapocalypse!' : 'Nap time.';
     $('end-blurb').textContent = won
-      ? `Every seat in the house is soaked. Eddie is in the yard, lying face-down in the grass.`
+      ? `Every seat in the house is soaked. Eddie is face-down in the yard. Somewhere, Biscuit is smiling.`
       : `Eddie confiscated your diaper privileges. ${ruined} of 9 couches ruined.`;
     $('end-grade').textContent = rank.grade;
     $('end-rank-title').textContent = rank.title;
@@ -1085,7 +1085,8 @@ export class Game {
           this.stats.buns += 1;
           this.sound.chomp();
           this.worldUi.pop(at.clone().setY(1.2), '+TUMMY', 'small');
-          if (Math.random() < 0.4) this.say('theo', THEO.bun.next(), 'calm', 1.4);
+          if (this.eddie.canSee && !this.eddie.chasing) this.say('eddie', EDDIE.buns.next(), 'shout', 2.2);
+          else if (Math.random() < 0.4) this.say('theo', THEO.bun.next(), 'calm', 1.4);
           break;
         case 'juice':
           this.zoomies = 7;
@@ -1117,6 +1118,7 @@ export class Game {
       this.stats.buns += 1;
       this.sound.chomp();
       this.worldUi.pop(at.clone().setY(1.3), 'TRASH BUN!', 'small');
+      if (this.eddie.canSee && !this.eddie.chasing) this.say('eddie', EDDIE.buns.next(), 'shout', 2.2);
       return true;
     },
     toyLanded: (at: THREE.Vector3) => {
