@@ -11,6 +11,13 @@
     <meta property="og:title" content="Eddie's Couch" />
     <meta property="og:description" content="A toddler. A man. Nine couches. A stealth-chase game about the worst houseguest ever." />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <!-- Launched from the home screen, the game runs without any browser bars. -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Eddie's Couch" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet" />
@@ -93,9 +100,10 @@
               <div class="panel-label">Zoomies</div>
               <div class="meter-track"><div id="stamina-fill" class="meter-fill"></div></div>
             </div>
-            <div id="item-slot" class="item-slot"></div>
           </div>
         </div>
+
+        <div id="item-slot" class="item-slot"></div>
 
         <div id="hint" class="hint"></div>
         <div id="hide-indicator" class="hide-indicator">Hidden</div>
@@ -110,7 +118,15 @@
         <div id="touch-zone" class="touch-zone"></div>
         <div id="joystick" class="joystick"><div id="joystick-knob" class="joystick-knob"></div></div>
         <button id="toy-button" class="touch-button toy-button" type="button">Toy</button>
-        <button id="puke-button" class="touch-button puke-button" type="button"><span>Hurl</span><small>hold for mega</small></button>
+        <button id="puke-button" class="touch-button puke-button" type="button">
+          <svg class="hurl-ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="hurl-ring-track" cx="50" cy="50" r="46" />
+            <circle id="hurl-ring-fill" class="hurl-ring-fill" cx="50" cy="50" r="46" />
+          </svg>
+          <span class="hurl-label">Hurl</span>
+          <small id="hurl-tummy" class="hurl-tummy">100%</small>
+          <span class="hurl-stamina"><span id="hurl-stamina-fill"></span></span>
+        </button>
       </div>
 
       <div id="screen-title" class="screen screen-title">
@@ -139,6 +155,9 @@
             <button id="sound-toggle" class="chip" type="button">Sound: on</button>
             <button id="quality-toggle" class="chip" type="button">Graphics: fancy</button>
             <span id="best-score" class="chip chip-static"></span>
+          </div>
+          <div id="install-tip" class="install-tip is-hidden">
+            <b>Full screen on iPhone:</b> tap <b>Share</b> &rarr; <b>Add to Home Screen</b>, then play from the new icon. No browser bars.
           </div>
         </div>
       </div>

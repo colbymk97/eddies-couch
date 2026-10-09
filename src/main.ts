@@ -10,6 +10,24 @@ const isTouch =
   ('ontouchstart' in window && navigator.maxTouchPoints > 0 && !window.matchMedia('(pointer: fine)').matches);
 document.body.classList.toggle('is-touch', isTouch);
 
+/** Short screens (a phone sideways, especially with Safari's bars showing) get the compact HUD. */
+function updateCompact() {
+  const h = window.visualViewport?.height ?? window.innerHeight;
+  document.body.classList.toggle('is-compact', (isTouch && h <= 560) || h <= 420);
+}
+updateCompact();
+window.addEventListener('resize', updateCompact);
+window.addEventListener('orientationchange', updateCompact);
+window.visualViewport?.addEventListener('resize', updateCompact);
+
+// On iPhone the only way to lose Safari's bars is to launch from the home screen, so say so.
+const isIPhone = /iPhone|iPod/.test(navigator.userAgent);
+const standalone =
+  (navigator as Navigator & { standalone?: boolean }).standalone === true ||
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.matchMedia('(display-mode: fullscreen)').matches;
+if (isIPhone && !standalone) document.getElementById('install-tip')?.classList.remove('is-hidden');
+
 async function waitForFonts() {
   if (!('fonts' in document)) return;
   const fonts = Promise.all([document.fonts.load('40px "Luckiest Guy"'), document.fonts.load('600 20px "Fredoka"')]);

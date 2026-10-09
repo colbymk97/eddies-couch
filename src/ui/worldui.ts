@@ -121,9 +121,12 @@ export class WorldUi {
       }
       const head = who === 'eddie' ? eddieHead : theoHead;
       const p = this.project(head);
-      const margin = 110;
+      // Keep bubbles on screen without sliding them under the HUD panels.
+      const compact = document.body.classList.contains('is-compact');
+      const margin = compact ? 80 : 110;
+      const top = compact ? 50 : this.height > 600 ? 150 : 110;
       const x = Math.min(this.width - margin, Math.max(margin, p.x));
-      const y = Math.min(this.height - 20, Math.max(this.height > 600 ? 150 : 110, p.y - (who === "eddie" && showMark ? 40 : 0)));
+      const y = Math.min(this.height - 20, Math.max(top, p.y - (who === 'eddie' && showMark ? (compact ? 28 : 40) : 0)));
       b.anchor.style.transform = `translate(${x}px, ${y}px)`;
       b.anchor.style.visibility = p.behind ? 'hidden' : 'visible';
     }

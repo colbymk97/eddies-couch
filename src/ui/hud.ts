@@ -47,6 +47,10 @@ export class Hud {
   private readonly hideIndicator = el<HTMLDivElement>('hide-indicator');
   private readonly banner = el<HTMLDivElement>('banner');
   private readonly toyButton = el<HTMLButtonElement>('toy-button');
+  private readonly pukeButton = el<HTMLButtonElement>('puke-button');
+  private readonly hurlRing = document.getElementById('hurl-ring-fill') as unknown as SVGCircleElement;
+  private readonly hurlTummy = el<HTMLElement>('hurl-tummy');
+  private readonly hurlStamina = el<HTMLElement>('hurl-stamina-fill');
   private iconEls: { couch: CouchState; node: HTMLDivElement; fill: HTMLDivElement }[] = [];
   private bannerTimer = 0;
   private hintTimer = 0;
@@ -131,6 +135,19 @@ export class Hud {
 
     this.staminaFill.style.width = `${Math.round(s.stamina * 100)}%`;
     this.staminaFill.classList.toggle('is-tired', s.tired);
+
+    // Touch: tummy is a ring around the HURL button, zoomies a bar inside it.
+    this.set('ring', String(Math.round(s.tummy)), () => {
+      this.hurlRing.style.strokeDashoffset = String(289 * (1 - s.tummy / 100));
+      this.hurlTummy.textContent = s.burrito > 0 ? `BURRITO x${s.burrito}` : `${Math.round(s.tummy)}%`;
+    });
+    this.set('burritoBtn', String(s.burrito), () => {
+      this.hurlTummy.textContent = s.burrito > 0 ? `BURRITO x${s.burrito}` : `${Math.round(s.tummy)}%`;
+      this.pukeButton.classList.toggle('is-burrito', s.burrito > 0);
+    });
+    this.pukeButton.classList.toggle('is-low', s.tummy < 18 && s.burrito <= 0);
+    this.hurlStamina.style.width = `${Math.round(s.stamina * 100)}%`;
+    this.hurlStamina.parentElement?.classList.toggle('is-tired', s.tired);
 
     const chips: string[] = [];
     if (s.hasToy) chips.push('<div class="item-chip toy">Squeaky toy</div>');

@@ -210,10 +210,13 @@ export class Game {
     this.hud.buildCouches(this.couches);
 
     this.wireScreens();
-    window.addEventListener('resize', () => {
+    const onResize = () => {
       this.gfx.resize();
       this.minimap.resize();
-    });
+    };
+    window.addEventListener('resize', onResize);
+    // iOS Safari's bars grow and shrink without always firing a window resize.
+    window.visualViewport?.addEventListener('resize', onResize);
     document.addEventListener('visibilitychange', () => {
       if (document.hidden && (this.mode === 'playing' || this.mode === 'intro')) this.pause();
     });
@@ -307,6 +310,7 @@ export class Game {
   private startGame() {
     if (this.mode !== 'title') return;
     this.sound.unlock();
+    this.enterFullscreen();
     this.showScreen('screen-title', false);
     this.showScreen('screen-help', false);
     this.beginIntro();
@@ -326,13 +330,32 @@ export class Game {
     this.queueHint(
       'controls',
       this.isTouch
-        ? 'Left thumb: waddle · Right thumb: look · HURL: tap, or hold for a MEGA HURL'
+        ? 'Left thumb: waddle · Right thumb: look · HURL: tap, or hold for MEGA'
         : 'WASD: waddle · Mouse: look · Click/Space: HURL (hold for MEGA) · Shift: zoomies',
     );
     this.queueHint('aim', 'The yellow arrow marks your auto-aim seat. Puke on every seat of every couch!');
   }
 
+  /** Phones/tablets: grab real fullscreen where the browser allows it (Android, iPad). */
+  private enterFullscreen() {
+    if (!this.isTouch || document.fullscreenElement) return;
+    const root = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
+    try {
+      const request = root.requestFullscreen ? root.requestFullscreen({ navigationUI: 'hide' }) : root.webkitRequestFullscreen?.();
+      Promise.resolve(request)
+        .then(() => (screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> }).lock?.('landscape'))
+        .catch(() => undefined);
+    } catch {
+      // Not supported (iPhone Safari): the title screen suggests Add to Home Screen instead.
+    }
+  }
+
+  private get compact() {
+    return document.body.classList.contains('is-compact');
+  }
+
   private restart() {
+    this.enterFullscreen();
     for (const id of ['screen-pause', 'screen-end', 'screen-help', 'screen-title']) this.showScreen(id, false);
     this.resetRound();
     this.beginIntro();
@@ -1218,7 +1241,7 @@ export class Game {
     this.shake = Math.max(0, this.shake - dt * 1.2);
     const sprintFov = Math.hypot(this.theoVel.x, this.theoVel.z) > 3.6 ? 5 : 0;
     this.fovKick = Math.max(0, this.fovKick - dt * 18);
-    const fov = 52 + sprintFov + this.fovKick;
+    const fov = (this.compact ? 58 : 52) + sprintFov + this.fovKick;
     if (Math.abs(this.camera.fov - fov) > 0.01) {
       this.camera.fov = damp(this.camera.fov, fov, 8, dt);
       this.camera.updateProjectionMatrix();
@@ -1316,7 +1339,7 @@ export class Game {
     this.hintCooldown -= dt;
     if (this.hintCooldown <= 0 && this.hintQueue.length > 0) {
       const text = this.hintQueue.shift() as string;
-      this.hud.showHint(text, 5.5);
+      this.hud.showHint(text, this.compact ? 4.5 : 5.5);
       this.hintCooldown = 6.2;
     }
   }
