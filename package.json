@@ -1,6 +1,7 @@
 {
   "name": "eddies-couch",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "A toddler. A man. Nine couches. A Three.js stealth-chase game about the worst houseguest ever.",
   "private": true,
   "type": "module",
   "scripts": {
