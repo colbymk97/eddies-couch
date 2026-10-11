@@ -167,7 +167,7 @@ export const ROLES: Record<Role, RoleInfo> = {
   zach: {
     name: 'Zach',
     tagline: 'Short. Swole. Never without a drumstick.',
-    blurb: 'Fling saucy nuggets. Hold to blast the sauce. Too strong to hold onto once a life. Eats a LOT, so know where the bidets are.',
+    blurb: 'Fling saucy nuggets and leave crumbs everywhere. Eat enough and your gut becomes a power-up: hold to unleash it, then race to a bidet. Flexes out of one grab per life.',
     action: 'Fling',
     secondary: 'Toy',
     color: '#ffb347',

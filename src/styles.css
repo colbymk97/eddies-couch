@@ -2468,3 +2468,38 @@ kbd {
 .is-compact.role-zach .item-slot {
   bottom: calc(136px + var(--safe-b));
 }
+
+/* Zach's gut power-up. */
+.gut-fill.is-ready {
+  background: linear-gradient(90deg, #b07434, #6b4423);
+  animation: gut-glow 0.9s ease-in-out infinite;
+}
+
+@keyframes gut-glow {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 2px #ffd23f;
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: inset 0 0 0 3px #fff3a0;
+    filter: brightness(1.35);
+  }
+}
+
+.item-chip.gut {
+  background: #8b5e34;
+  color: #fff;
+  animation: pulse 0.9s ease-in-out infinite;
+}
+
+.puke-button.is-gut {
+  background: radial-gradient(circle at 35% 30%, #d9a066, #8b5e34 60%, #4a2f17);
+  box-shadow: 0 0 0 4px #ffd23f, 5px 5px 0 var(--ink);
+  animation: pulse 0.9s ease-in-out infinite;
+}
+
+.couch-icon.is-brown .fill,
+.couch-icon.is-ruined.is-brown {
+  background: #7a5230;
+}

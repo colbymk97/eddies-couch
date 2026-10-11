@@ -13,7 +13,7 @@ export interface MessControls {
   face: number | null;
 }
 
-export type ActionAnim = 'hurl' | 'throw' | 'squeeze' | 'eat' | 'flex' | 'yelp';
+export type ActionAnim = 'hurl' | 'throw' | 'squeeze' | 'eat' | 'flex' | 'yelp' | 'blast';
 
 /**
  * Someone making a mess in Eddie's house: Theo (puke) or Zach (sauce and crumbs).
@@ -43,14 +43,16 @@ export class Messer {
 
   charging = false;
   chargeTime = 0;
+  /** The charge in progress is Zach's gut power-up, not a sauce shot. */
+  blastCharge = false;
   action: ActionAnim | null = null;
   actionTime = 0;
   heaveCooldown = 0;
   fireCooldown = 0;
 
-  /** Zach only: how full he is, 0..100. Past ~55 his gut gets ideas. */
+  /** Zach only: how full his gut is, 0..100. Full means his power-up is ready. */
   bloat = 0;
-  /** Seconds left to reach a toilet. 0 = no emergency. */
+  /** Seconds left to reach a bidet after using the power-up. 0 = all clean. */
   emergency = 0;
   /** Index of the toilet he is sitting on. */
   toilet = -1;
@@ -93,6 +95,11 @@ export class Messer {
     return this.timeout <= 0 && this.toilet < 0 && !this.carried && this.invuln <= 0 && !this.hidden;
   }
 
+  /** Zach's gut is full: hold the action to unleash it. */
+  get gutReady() {
+    return this.id === 'zach' && this.bloat >= 100 && this.emergency <= 0;
+  }
+
   get active() {
     return this.timeout <= 0 && this.toilet < 0 && !this.carried;
   }
@@ -111,6 +118,7 @@ export class Messer {
     this.hidden = false;
     this.charging = false;
     this.chargeTime = 0;
+    this.blastCharge = false;
     this.action = null;
     this.actionTime = 0;
     this.heaveCooldown = 0;
@@ -186,15 +194,16 @@ export class Messer {
       this.actionTime -= dt;
       if (this.actionTime <= 0) this.action = null;
     }
-    if (this.id === 'zach') {
-      this.bloat = Math.max(0, this.bloat - dt * 0.6);
-      const target = this.emergency > 0 ? 1 : clamp((this.bloat - 50) / 50, 0, 0.6);
-      this.rig.pale = damp(this.rig.pale, target, 3, dt);
-    }
+    if (this.id === 'zach') this.rig.pale = damp(this.rig.pale, this.emergency > 0 ? 1 : 0, 3, dt);
   }
 
   /** World position of the mouth (Theo) or the sauce bottle nozzle (Zach). */
   emitter = (target = new THREE.Vector3()) => this.rig.emitter.getWorldPosition(target);
+
+  /** Where the power-up comes out. */
+  rear(target = new THREE.Vector3()) {
+    return this.rig.rear.getWorldPosition(target);
+  }
 
   mouth(target = new THREE.Vector3()) {
     return this.rig.headTop.getWorldPosition(target).add(new THREE.Vector3(0, -this.rig.spec.headR * 1.4, 0));
@@ -220,13 +229,19 @@ export class Messer {
     if (this.carried) anim = 'carried';
     else if (this.toilet >= 0) {
       anim = 'sit';
-      amount = this.toiletTime < 2.6 ? 1 : 0;
+      amount = this.toiletTime < 0.9 ? 1 : 0;
     } else if (this.timeout > 0) anim = 'sit';
     else if (this.celebrating) anim = 'celebrate';
     else if (this.sulking) anim = 'sulk';
     else if (this.frozen > 0) anim = 'alert';
     else if (this.action === 'flex') anim = 'flex';
-    else if (this.charging) {
+    else if (this.charging && this.blastCharge) {
+      anim = 'blast';
+      amount = Math.min(0.94, chargeLevel);
+    } else if (this.action === 'blast') {
+      anim = 'blast';
+      amount = 1;
+    } else if (this.charging) {
       anim = 'charge';
       amount = chargeLevel;
     } else if (this.action === 'hurl') anim = this.id === 'zach' ? 'squeeze' : 'hurl';

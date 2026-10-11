@@ -997,3 +997,51 @@ export function sauceSplatTexture(seed: number) {
     }
   });
 }
+
+/** Zach's power-up, as a cartoon: a lumpy brown splat with a glossy rim. */
+export function brownSplatTexture(seed: number) {
+  return canvasTexture(256, 256, (ctx, w, h) => {
+    const cx = w / 2 + (seed % 2 ? 6 : -6);
+    const cy = h / 2;
+    const dark = '#3f2610';
+    const mid = '#6b4423';
+    const light = '#8f6235';
+    // Main blob, made of overlapping lumps.
+    for (let i = 0; i < 14; i += 1) {
+      const a = rand(0, TAU);
+      const d = rand(0, 46);
+      const r = rand(22, 46);
+      const g = ctx.createRadialGradient(cx + Math.cos(a) * d, cy + Math.sin(a) * d, r * 0.2, cx + Math.cos(a) * d, cy + Math.sin(a) * d, r);
+      g.addColorStop(0, mid);
+      g.addColorStop(0.75, dark);
+      g.addColorStop(1, 'rgba(63,38,16,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, r, 0, TAU);
+      ctx.fill();
+    }
+    // Splatter droplets flung outward.
+    for (let i = 0; i < 26; i += 1) {
+      const a = rand(0, TAU);
+      const d = rand(55, 118);
+      ctx.fillStyle = i % 3 ? mid : dark;
+      ctx.beginPath();
+      ctx.ellipse(cx + Math.cos(a) * d, cy + Math.sin(a) * d, rand(3, 10), rand(2, 6), a, 0, TAU);
+      ctx.fill();
+    }
+    // Wet highlights.
+    ctx.fillStyle = light;
+    for (let i = 0; i < 9; i += 1) {
+      ctx.beginPath();
+      ctx.ellipse(cx + rand(-40, 40), cy + rand(-40, 40), rand(4, 11), rand(2, 4), rand(0, TAU), 0, TAU);
+      ctx.fill();
+    }
+    // Suspicious corn.
+    ctx.fillStyle = '#f2c94c';
+    for (let i = 0; i < 5; i += 1) {
+      ctx.beginPath();
+      ctx.ellipse(cx + rand(-45, 45), cy + rand(-45, 45), 3.5, 2.5, rand(0, TAU), 0, TAU);
+      ctx.fill();
+    }
+  });
+}

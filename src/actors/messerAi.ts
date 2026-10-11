@@ -28,7 +28,7 @@ export interface AiView {
   megaChance: number;
 }
 
-export type AiFire = { kind: 'quick'; seat: Seat } | { kind: 'mega'; yaw: number; level: number };
+export type AiFire = { kind: 'quick'; seat: Seat } | { kind: 'mega'; yaw: number; level: number } | { kind: 'blast'; yaw: number; level: number };
 
 export interface AiIntent {
   controls: MessControls;
@@ -108,7 +108,7 @@ export class MesserBrain {
         const inRange = d < 2.5 && v.collision.lineOfSight(m.position.x, m.position.z, seat.top.x, seat.top.z);
         if (inRange) {
           c.face = yawTo(m.position.x, m.position.z, seat.top.x, seat.top.z);
-          if (m.fireCooldown <= 0 && (m.ammo >= 12 || m.burrito > 0)) {
+          if (m.fireCooldown <= 0 && (m.ammo >= 12 || m.burrito > 0 || m.gutReady)) {
             m.fireCooldown = rand(v.fireRate[0], v.fireRate[1]);
             this.intent.fire = this.planShot(m, v, seat, d);
           }
@@ -122,6 +122,8 @@ export class MesserBrain {
   }
 
   private planShot(m: Messer, v: AiView, seat: Seat, d: number): AiFire {
+    // Zach's gut is loaded: back up to the couch and let it rip.
+    if (m.gutReady) return { kind: 'blast', yaw: yawTo(m.position.x, m.position.z, seat.top.x, seat.top.z), level: clamp((d - 1.8) / 4.5, 0.1, 1) };
     // A mega shot when a few fresh seats sit close together.
     const cluster = v.seats.filter((s) => !s.messed && !s.occupied && !s.couch.ruined && dist2D(s.top.x, s.top.z, seat.top.x, seat.top.z) < 1.25).length;
     if (cluster >= 2 && (m.burrito > 0 || m.ammo > 55) && Math.random() < v.megaChance) {
@@ -152,7 +154,8 @@ export class MesserBrain {
       this.flee(m, v, prev);
       return;
     }
-    if (m.ammo < 30 && m.burrito <= 0) {
+    const hungry = (m.ammo < 30 && m.burrito <= 0) || (m.id === 'zach' && m.bloat < 100 && m.ammo < 70);
+    if (hungry) {
       const food = v.pickups.nearest(m.position, ['food', 'feast', 'burrito']);
       if (food) {
         this.mode = 'eat';

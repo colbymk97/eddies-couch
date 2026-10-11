@@ -17,6 +17,9 @@ export interface HudState {
   stamina: number;
   tired: boolean;
   bloat: number;
+  /** Zach's power-up is loaded. */
+  gutReady: boolean;
+  /** Seconds left to reach a bidet after the power-up. */
   emergency: number;
   eddie: { label: string; tone: 'calm' | 'warn' | 'danger' | 'good' };
   rage: number;
@@ -131,9 +134,11 @@ export class Hud {
       const messed = icon.couch.seats.filter((seat) => seat.messed);
       const pct = Math.round((messed.length / icon.couch.seats.length) * 100);
       const sauce = messed.length > 0 && messed.filter((seat) => seat.mess === 'sauce').length >= messed.length / 2;
+      const brown = messed.some((seat) => seat.mess === 'brown');
       if (icon.couch.ruined) ruined += 1;
       const setting = icon.couch.setting > 0;
-      this.set(`icon-${icon.couch.def.id}`, `${pct}-${icon.couch.ruined}-${s.targetCouch === icon.couch}-${sauce}-${setting}`, () => {
+      this.set(`icon-${icon.couch.def.id}`, `${pct}-${icon.couch.ruined}-${s.targetCouch === icon.couch}-${sauce}-${brown}-${setting}`, () => {
+        icon.node.classList.toggle('is-brown', brown);
         icon.node.classList.toggle('is-setting', setting);
         icon.fill.style.height = `${pct}%`;
         icon.node.classList.toggle('is-ruined', icon.couch.ruined);
@@ -193,26 +198,29 @@ export class Hud {
     this.staminaFill.style.width = `${Math.round(s.stamina * 100)}%`;
     this.staminaFill.classList.toggle('is-tired', s.tired);
     const gut = `${Math.round(s.emergency > 0 ? 100 : s.bloat)}%`;
-    const gutDanger = s.bloat > 55 || s.emergency > 0;
+    const gutDanger = s.emergency > 0;
     for (const fill of [this.gutFill, this.gutMini]) {
       fill.style.width = gut;
       fill.classList.toggle('is-danger', gutDanger);
+      fill.classList.toggle('is-ready', s.gutReady);
     }
 
     // Touch: ammo is a ring around the action button, stamina a bar inside it.
     const ring = eddieMode ? s.ring : s.ammo / 100;
     this.set('ring', ring.toFixed(2), () => (this.hurlRing.style.strokeDashoffset = String(289 * (1 - ring))));
-    const sub = eddieMode ? '' : s.burrito > 0 ? `BURRITO x${s.burrito}` : `${Math.round(s.ammo)}%`;
+    const sub = eddieMode ? '' : s.gutReady ? 'HOLD: BLAST' : s.burrito > 0 ? `BURRITO x${s.burrito}` : `${Math.round(s.ammo)}%`;
     this.set('hurlSub', sub, () => (this.hurlTummy.textContent = sub));
     this.set('actionLabel', s.actionLabel, () => (this.pukeLabel.textContent = s.actionLabel));
     this.set('burritoBtn', String(s.burrito), () => this.pukeButton.classList.toggle('is-burrito', s.burrito > 0));
     this.pukeButton.classList.toggle('is-low', !eddieMode && s.ammo < 18 && s.burrito <= 0);
     this.pukeButton.classList.toggle('is-blocked', s.emergency > 0);
+    this.pukeButton.classList.toggle('is-gut', s.gutReady);
     this.hurlStamina.style.width = `${Math.round(s.stamina * 100)}%`;
     this.hurlStamina.parentElement?.classList.toggle('is-tired', s.tired);
 
     const chips: string[] = [];
-    if (s.emergency > 0) chips.push(`<div class="item-chip emergency">Gut emergency! Bidet ${Math.ceil(s.emergency)}s</div>`);
+    if (s.emergency > 0) chips.push(`<div class="item-chip emergency">Get to a bidet! ${Math.ceil(s.emergency)}s</div>`);
+    if (s.gutReady) chips.push(`<div class="item-chip gut">Gut loaded! Hold to blast</div>`);
     if (s.hasToy) chips.push('<div class="item-chip toy">Squeaky toy</div>');
     if (s.burrito > 0) chips.push(`<div class="item-chip burrito">Burrito x${s.burrito}</div>`);
     if (s.zoomies > 0) chips.push(`<div class="item-chip juice">${s.role === 'zach' ? 'Pre-workout' : 'Zoomies'} ${Math.ceil(s.zoomies)}s</div>`);

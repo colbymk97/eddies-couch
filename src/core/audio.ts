@@ -303,6 +303,42 @@ export class Sound {
     this.noise(1.1, { type: 'lowpass', freq: 380, gain: 0.2, attack: 0.05 });
   }
 
+  /** Zach's power-up. Long, wet, buzzy and deeply regrettable. */
+  blast(power: number) {
+    if (!this.ctx || !this.sfxBus) return;
+    const ctx = this.ctx;
+    const t = ctx.currentTime;
+    const duration = 0.9 + power * 0.7;
+    const osc = ctx.createOscillator();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(110, t);
+    osc.frequency.exponentialRampToValueAtTime(55, t + duration);
+    // Flutter: the trademark rasp.
+    const flutter = ctx.createOscillator();
+    const flutterGain = ctx.createGain();
+    flutter.type = 'square';
+    flutter.frequency.setValueAtTime(34, t);
+    flutter.frequency.linearRampToValueAtTime(18, t + duration);
+    flutterGain.gain.value = 45;
+    flutter.connect(flutterGain).connect(osc.frequency);
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(900, t);
+    filter.frequency.exponentialRampToValueAtTime(260, t + duration);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.45, t + 0.03);
+    gain.gain.setValueAtTime(0.45, t + duration * 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+    osc.connect(filter).connect(gain).connect(this.sfxBus);
+    osc.start(t);
+    flutter.start(t);
+    osc.stop(t + duration + 0.05);
+    flutter.stop(t + duration + 0.05);
+    this.noise(duration, { type: 'bandpass', freq: 500, freqTo: 180, q: 3, gain: 0.35 });
+    this.noise(0.3, { type: 'lowpass', freq: 400, gain: 0.3, delay: duration * 0.85 });
+  }
+
   bidet() {
     this.noise(1.6, { type: 'highpass', freq: 2600, gain: 0.16, attack: 0.15 });
     this.noise(1.4, { type: 'bandpass', freq: 1400, freqTo: 2200, q: 2, gain: 0.08, delay: 0.1, attack: 0.2 });

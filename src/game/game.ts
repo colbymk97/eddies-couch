@@ -41,11 +41,11 @@ const RUIN_LIMIT = 5;
 const SET_TIME = 10;
 
 const FOOD: Record<FoodKind, { ammo: number; bloat: number; label: string }> = {
-  nuggets: { ammo: 30, bloat: 20, label: 'NUGGETS!' },
-  drumsticks: { ammo: 34, bloat: 26, label: 'DRUMSTICKS!' },
-  mac: { ammo: 26, bloat: 16, label: 'MAC & CHEESE!' },
-  chicken: { ammo: 100, bloat: 42, label: 'WHOLE CHICKEN!' },
-  burrito: { ammo: 100, bloat: 50, label: 'MYSTERY BURRITO!' },
+  nuggets: { ammo: 30, bloat: 22, label: 'NUGGETS!' },
+  drumsticks: { ammo: 34, bloat: 28, label: 'DRUMSTICKS!' },
+  mac: { ammo: 26, bloat: 18, label: 'MAC & CHEESE!' },
+  chicken: { ammo: 100, bloat: 50, label: 'WHOLE CHICKEN!' },
+  burrito: { ammo: 100, bloat: 100, label: 'MYSTERY BURRITO!' },
 };
 
 const COLORS: Record<Role, string> = { theo: '#8fd3ff', zach: '#ffb347', eddie: '#ff6b5e' };
@@ -109,6 +109,7 @@ export class Game {
   private caught: Caught | null = null;
   private readonly gurgle: Record<MesserId, number> = { theo: 0, zach: 0 };
   private readonly timers: { t: number; fn: () => void }[] = [];
+  private blastAim = 0;
 
   // Camera.
   private camYaw = Math.PI;
@@ -130,7 +131,7 @@ export class Game {
   private lives = MAX_LIVES;
   private elapsed = 0;
   private clock = ROUND_TIME;
-  private stats = { slips: 0, caught: 0, seats: 0, megas: 0, eaten: 0, cleaned: 0, catches: 0, braps: 0, swole: 0, accidents: 0, yells: 0 };
+  private stats = { slips: 0, caught: 0, seats: 0, megas: 0, eaten: 0, cleaned: 0, catches: 0, braps: 0, swole: 0, accidents: 0, yells: 0, blasts: 0 };
   private rage = 0;
   private beastAnnounced = false;
   private seenHints = new Set<string>();
@@ -226,7 +227,7 @@ export class Game {
       onSpray: (origin, dir) => this.puke.spray(origin, dir),
       onWake: () => this.queueHint('wake', 'Eddie is awake! Stay out of his red vision cone on the minimap.'),
       onDirtySpotted: (seat) => {
-        if (this.eddie.state !== 'chase') this.say('eddie', EDDIE.dirty.next(), 'shout', 1.6);
+        if (this.eddie.state !== 'chase') this.say('eddie', seat.mess === 'brown' ? EDDIE.brown.next() : EDDIE.dirty.next(), 'shout', 2);
         this.queueHint('clean', `Eddie spotted a stain on ${seat.couch.def.name} and will scrub it. Finish couches to ruin them for good!`);
       },
       onSnore: () => this.sound.snore(),
@@ -434,7 +435,7 @@ export class Game {
           : `WASD: move · Mouse: look · Click/Space: ${info.action.toUpperCase()} (hold for MEGA) · Shift: sprint`,
       );
       this.queueHint('aim', 'The yellow arrow marks your auto-aim seat. Mess up every seat of every couch!');
-      if (zach) this.queueHint('gut', 'Food refills your sauce but fills your gut. When it’s full, RUN to a bidet (the blue dots on the minimap).');
+      if (zach) this.queueHint('gut', 'Food refills your sauce and fills your GUT meter. A full gut is a power-up. After using it, run to a bidet (the blue dots on the minimap).');
     }
   }
 
@@ -536,7 +537,7 @@ export class Game {
     this.lives = MAX_LIVES;
     this.elapsed = 0;
     this.clock = ROUND_TIME;
-    this.stats = { slips: 0, caught: 0, seats: 0, megas: 0, eaten: 0, cleaned: 0, catches: 0, braps: 0, swole: 0, accidents: 0, yells: 0 };
+    this.stats = { slips: 0, caught: 0, seats: 0, megas: 0, eaten: 0, cleaned: 0, catches: 0, braps: 0, swole: 0, accidents: 0, yells: 0, blasts: 0 };
     this.rage = 0;
     this.beastAnnounced = false;
     this.seenHints.clear();
@@ -756,9 +757,13 @@ export class Game {
     return target.set(fx * move.y - fz * move.x, fz * move.y + fx * move.x);
   }
 
-  /** Desktop aims with the mouse (camera); touch aims where the character faces. */
-  private aimYaw(facing: number) {
-    return this.isTouch ? facing : this.camYaw;
+  /**
+   * Desktop aims with the mouse (camera); touch aims where the character faces.
+   * While Zach lines up his power-up he faces away from the target, so touch tracks that aim separately.
+   */
+  private aimYaw(m: Messer) {
+    if (!this.isTouch) return this.camYaw;
+    return m.blastCharge ? this.blastAim : m.facing;
   }
 
   private updateCameraInput(dt: number) {
@@ -800,11 +805,16 @@ export class Game {
     }
     if (attacking && this.aimSeat) c.face = yawTo(m.position.x, m.position.z, this.aimSeat.top.x, this.aimSeat.top.z);
     else if (attacking && !this.isTouch) c.face = this.camYaw;
+    if (m.charging && m.blastCharge) {
+      // Back up to the target.
+      if (this.isTouch && c.move.lengthSq() > 0.02) this.blastAim = Math.atan2(c.move.x, c.move.y);
+      c.face = this.aimYaw(m) + Math.PI;
+    }
     m.move(dt, this.house.collision, c);
     this.updatePlayerAttack(m, dt);
 
     if (this.input.throwPressed && m.hasToy && this.mode === 'playing' && m.emergency <= 0) {
-      this.throwToy(m, this.aimYaw(m.facing));
+      this.throwToy(m, this.aimYaw(m));
     }
   }
 
@@ -814,7 +824,7 @@ export class Game {
       this.puke.hideAim();
       return;
     }
-    const yaw = this.aimYaw(m.facing);
+    const yaw = this.aimYaw(m);
     this.aimSeat = m.charging || m.emergency > 0 ? null : this.findAimSeat(m, yaw);
 
     if (this.input.pukePressed) {
@@ -826,6 +836,12 @@ export class Game {
         }
       } else if (m.frozen > 0) {
         // Frozen stiff.
+      } else if (m.gutReady) {
+        // Tap still flings; holding lines up the power-up.
+        m.charging = true;
+        m.chargeTime = 0;
+        m.blastCharge = true;
+        this.blastAim = this.isTouch ? m.facing : this.camYaw;
       } else if (m.ammo < QUICK_COST - 3 && m.burrito <= 0) {
         if (m.heaveCooldown <= 0) {
           m.heaveCooldown = 0.9;
@@ -851,14 +867,17 @@ export class Game {
       const level = this.chargeLevel(m);
       this.chargeHandle?.update(level);
       if (m.chargeTime > CHARGE_DELAY) {
-        const landing = this.megaLanding(m, level, yaw);
-        this.puke.showArc(m.emitter(), landing.point, landing.radius, this.time, m.style);
+        const landing = this.megaLanding(m, level, yaw, m.blastCharge);
+        this.puke.showArc(m.blastCharge ? m.rear() : m.emitter(), landing.point, landing.radius, this.time, m.blastCharge ? 'brown' : m.style);
         this.aimPoint.copy(landing.point);
       }
       if (this.input.pukeReleased || !this.input.pukeHeld) {
         const wasMega = m.chargeTime > CHARGE_DELAY;
+        const blast = m.blastCharge;
         this.stopCharge();
-        if (wasMega) this.megaAttack(m, level, yaw);
+        if (blast && wasMega) this.gutBlast(m, level, yaw);
+        else if (blast && m.ammo < QUICK_COST - 3 && m.burrito <= 0) this.say('zach', ZACH.empty.next(), 'calm', 1.5);
+        else if (wasMega) this.megaAttack(m, level, yaw);
         else this.quickAttack(m, this.findAimSeat(m, yaw), yaw);
       }
     }
@@ -868,7 +887,7 @@ export class Game {
 
   private chargeLevel(m: Messer) {
     const raw = clamp((m.chargeTime - CHARGE_DELAY) / CHARGE_TIME, 0, 1);
-    if (m.burrito > 0) return raw;
+    if (m.burrito > 0 || m.blastCharge) return raw;
     const affordable = clamp((m.ammo - MEGA_BASE_COST) / MEGA_EXTRA_COST, 0, 1);
     return Math.min(raw, affordable);
   }
@@ -878,6 +897,7 @@ export class Game {
     if (m) {
       m.charging = false;
       m.chargeTime = 0;
+      m.blastCharge = false;
     }
     this.chargeHandle?.stop();
     this.chargeHandle = null;
@@ -907,13 +927,13 @@ export class Game {
     return best;
   }
 
-  private megaLanding(m: Messer, level: number, yaw: number) {
+  private megaLanding(m: Messer, level: number, yaw: number, blast = false) {
     const dir = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-    let distance = 2.4 + level * 5.6;
+    let distance = blast ? 1.8 + level * 4.5 : 2.4 + level * 5.6;
     const wall = this.house.collision.rayDistance(m.position.x, m.position.z, dir.x, dir.z, distance + 0.5);
     distance = Math.min(distance, wall - 0.3);
     const point = m.position.clone().addScaledVector(dir, Math.max(0.8, distance));
-    const radius = (0.75 + level * 0.8) * (m.burrito > 0 ? 1.4 : 1);
+    const radius = blast ? 1.05 + level * 0.95 : (0.75 + level * 0.8) * (m.burrito > 0 ? 1.4 : 1);
     const hits = this.seats.filter(
       (s) =>
         !s.occupied &&
@@ -1074,12 +1094,13 @@ export class Game {
     seat.messed = true;
     seat.mess = style;
     this.puke.splatSeat(seat, style);
-    seat.material.color.copy(seat.baseColor).lerp(new THREE.Color(style === 'sauce' ? 0x8e2b14 : 0xa6c93a), style === 'sauce' ? 0.35 : 0.5);
+    const tint = style === 'sauce' ? 0x8e2b14 : style === 'brown' ? 0x5a3a1e : 0xa6c93a;
+    seat.material.color.copy(seat.baseColor).lerp(new THREE.Color(tint), style === 'puke' ? 0.5 : style === 'brown' ? 0.5 : 0.35);
     this.puke.splash(seat.top, 12, 1, style);
     if (this.near(seat.top)) this.sound.splat(false);
 
     if (this.role === 'eddie') {
-      this.worldUi.pop(seat.top.clone().setY(seat.top.y + 0.7), style === 'sauce' ? 'SAUCED!' : 'PUKED!', 'red');
+      this.worldUi.pop(seat.top.clone().setY(seat.top.y + 0.7), style === 'sauce' ? 'SAUCED!' : style === 'brown' ? 'BIOHAZARD!' : 'PUKED!', 'red');
       this.queueHint('scrub', this.isTouch ? 'A stain! Walk up to it and hold GRAB to scrub it clean.' : 'A stain! Walk up to it and hold Click/Space to scrub it clean.');
     } else {
       this.stats.seats += 1;
@@ -1087,7 +1108,7 @@ export class Game {
       this.comboTimer = 5;
       this.maxCombo = Math.max(this.maxCombo, this.combo);
       const gained = this.addScore(100, true);
-      const word = style === 'sauce' ? pick(POP.sauce) : pick(POP.seat);
+      const word = style === 'sauce' ? pick(POP.sauce) : style === 'brown' ? pick(POP.brown) : pick(POP.seat);
       this.worldUi.pop(seat.top.clone().setY(seat.top.y + 0.7), by.isPlayer ? `${word} +${gained}` : `${by.name.toUpperCase()}: ${word} +${gained}`, by.isPlayer ? '' : 'small');
     }
 
@@ -1260,6 +1281,7 @@ export class Game {
       const fire = intent.fire;
       if (fire?.kind === 'quick') this.quickAttack(m, fire.seat, yawTo(m.position.x, m.position.z, fire.seat.top.x, fire.seat.top.z));
       else if (fire?.kind === 'mega') this.megaAttack(m, fire.level, fire.yaw);
+      else if (fire?.kind === 'blast') this.gutBlast(m, fire.level, fire.yaw);
       if (intent.throwToy && m.hasToy) {
         const away = yawTo(this.eddie.position.x, this.eddie.position.z, m.position.x, m.position.z);
         this.throwToy(m, away + (Math.random() < 0.5 ? 1.4 : -1.4));
@@ -1267,47 +1289,120 @@ export class Game {
     }
   }
 
-  // ================================================================ Zach's gut
+  // ================================================================ Zach's gut power-up
 
   private updateGut(m: Messer, dt: number) {
     if (m.id !== 'zach' || !m.active || this.mode !== 'playing') return;
-    const toilets = this.house.toilets;
     if (m.emergency > 0) {
+      // After the power-up: get to a bidet.
       m.emergency -= dt;
-      if (Math.random() < dt * 5) {
-        const back = new THREE.Vector3(-Math.sin(m.facing) * 0.25, m.rig.hipHeight * 0.95, -Math.cos(m.facing) * 0.25);
-        this.effects.gas(m.position.clone().add(back));
-      }
+      if (Math.random() < dt * 5) this.effects.gas(m.rear(new THREE.Vector3()));
       this.gurgle[m.id] -= dt;
       if (this.gurgle[m.id] <= 0) {
         this.gurgle[m.id] = 2.2;
         if (m.isPlayer || this.near(m.position)) this.sound.gurgle();
       }
-      const i = toilets.findIndex((t) => dist2D(t.front.x, t.front.z, m.position.x, m.position.z) < 0.8);
+      const i = this.house.toilets.findIndex((t) => dist2D(t.front.x, t.front.z, m.position.x, m.position.z) < 0.8);
       if (i >= 0) this.sitOnToilet(m, i);
       else if (m.emergency <= 0) this.accident(m);
       return;
     }
-    // Feeling it? A quick sit is always an option.
-    if (m.bloat >= 35 && m.speed < 0.8) {
-      const i = toilets.findIndex((t) => dist2D(t.front.x, t.front.z, m.position.x, m.position.z) < 0.7);
-      if (i >= 0) {
-        this.sitOnToilet(m, i);
-        return;
-      }
-    }
-    if (m.bloat > 55) {
+    if (m.gutReady) {
+      // Loaded and rumbling.
       this.gurgle[m.id] -= dt;
       if (this.gurgle[m.id] <= 0) {
-        this.gurgle[m.id] = rand(3.5, 5.5);
-        if (m.isPlayer || this.near(m.position)) {
-          this.sound.gurgle();
-          if (Math.random() < 0.5) this.say('zach', ZACH.gurgle.next(), 'calm', 1.6);
-        }
-        if (m.isPlayer) this.queueHint('gutWarn', 'Zach’s gut is rumbling. Too much food and it WILL go critical. Bathrooms are the blue dots.', true);
+        this.gurgle[m.id] = rand(4, 6.5);
+        if (m.isPlayer || this.near(m.position)) this.sound.gurgle();
       }
-      const p = 0.03 + ((m.bloat - 55) / 45) * 0.22;
-      if (Math.random() < p * dt) this.startEmergency(m);
+    }
+  }
+
+  /** Eating fills Zach's gut. A full gut is his power-up. */
+  private addBloat(m: Messer, amount: number) {
+    if (m.id !== 'zach' || m.emergency > 0) return;
+    const was = m.bloat;
+    m.bloat = Math.min(100, m.bloat + amount);
+    if (was >= 100 || m.bloat < 100) return;
+    this.gurgle[m.id] = rand(3, 5);
+    if (m.isPlayer || this.near(m.position)) {
+      this.sound.gurgle();
+      this.say('zach', ZACH.ready.next(), 'calm', 1.8);
+    }
+    if (m.isPlayer) {
+      this.hud.showBanner(
+        'GUT POWER-UP READY!',
+        this.isTouch ? 'Hold FLING to turn around and let it rip. Then get to a bidet!' : 'Hold Click/Space to turn around and let it rip. Then get to a bidet!',
+        'brown',
+        3,
+      );
+      this.queueHint('gutReady', 'Tap still flings nuggets. HOLD to aim the power-up: Zach backs up to the couch. Afterwards, run to a toilet (blue dots) before the timer runs out.', true);
+    } else if (this.role === 'eddie') {
+      this.queueHint('zachLoaded', 'Zach’s gut is fully loaded. Keep him away from your couches. After he uses it he has to run to a bathroom: that’s your chance.');
+    }
+  }
+
+  /** The power-up: Zach turns around and lets it rip. Then he needs a bidet. */
+  private gutBlast(m: Messer, level: number, yaw: number) {
+    const { point, radius, hits } = this.megaLanding(m, level, yaw, true);
+    m.bloat = 0;
+    m.charging = false;
+    m.blastCharge = false;
+    m.facing = yaw + Math.PI;
+    m.vel.set(0, 0, 0);
+    m.play('blast', 1.1);
+    this.stats.blasts += m.isPlayer ? 1 : 0;
+    const audible = m.isPlayer || this.near(m.position);
+    if (audible) this.sound.blast(level);
+    if (m.isPlayer) {
+      this.shake = Math.max(this.shake, 0.3 + level * 0.25);
+      this.fovKick = 8 + level * 6;
+      this.flash = 0.08;
+    }
+    const head = m.head(new THREE.Vector3()).add(new THREE.Vector3(0, 0.4, 0));
+    this.worldUi.pop(head, 'BRRRRAAAAP!', 'brown');
+    for (let i = 0; i < 10; i += 1) this.effects.gas(m.rear(new THREE.Vector3()).add(new THREE.Vector3(rand(-0.2, 0.2), rand(0, 0.2), rand(-0.2, 0.2))));
+    this.puke.fire(
+      () => m.rear(),
+      point,
+      radius,
+      0.9 + level,
+      () => {
+        const fresh = hits.filter((s) => !s.messed);
+        for (const s of hits) this.hitSeat(s, 'brown', m);
+        if (fresh.length >= 2 && this.role !== 'eddie') {
+          const bonus = 250 * (fresh.length - 1);
+          this.addScore(bonus, false);
+          this.worldUi.pop(point.clone().setY(point.y + 1.0), `BIOHAZARD x${fresh.length}! +${bonus}`, 'gold');
+        }
+        if (hits.length === 0) this.floorSplat(point, 0.9 + level * 0.6, 'brown', m.isPlayer);
+        this.puke.splash(point, 24 + Math.round(level * 24), 1.2 + level * 0.5, 'brown');
+        this.effects.addStink(point.clone().setY(Math.max(point.y, 0.3)));
+        if (this.near(point)) this.sound.splat(true);
+        this.makeNoise(point, 14, 'splat');
+        if (m.isPlayer) this.shake = Math.max(this.shake, 0.15);
+      },
+      'brown',
+    );
+    this.makeNoise(m.position, 10, 'puke');
+    this.say('zach', ZACH.blast.next(), 'shout', 1.4);
+
+    // Now: the bidet.
+    m.emergency = EMERGENCY_TIME;
+    this.gurgle[m.id] = 1.5;
+    this.later(1.3, () => {
+      if (m.emergency > 0) this.say('zach', ZACH.needBidet.next(), 'shout', 1.6);
+    });
+    const toilet = this.nearestToilet(m.position);
+    const room = roomAt(toilet.seat.x, toilet.seat.z)?.name ?? 'the bathroom';
+    if (m.isPlayer) {
+      this.later(0.9, () => {
+        if (m.emergency > 0) this.hud.showBanner('NOW FIND A BIDET!', `${EMERGENCY_TIME} seconds. Nearest: ${room}. Follow the blue arrow.`, 'brown', 3);
+      });
+      this.queueHint('bidetRun', 'You can’t attack until you’ve used a bidet, and you’re slow. Eddie can still grab you on the way!', true);
+    } else if (this.role === 'eddie') {
+      this.queueHint('zachRuns', 'Zach is waddling to a bathroom and can’t attack. Grab him before he gets there!', true);
+    } else {
+      this.queueHint('allyBlast', 'Zach used his power-up. He’s off to the bidet for a minute.');
     }
   }
 
@@ -1324,26 +1419,6 @@ export class Game {
     return best;
   }
 
-  private startEmergency(m: Messer) {
-    m.emergency = EMERGENCY_TIME;
-    m.charging = false;
-    if (m.isPlayer) this.stopCharge();
-    this.gurgle[m.id] = 0.3;
-    this.say('zach', ZACH.emergency.next(), 'shout', 1.8);
-    const toilet = this.nearestToilet(m.position);
-    const room = roomAt(toilet.seat.x, toilet.seat.z)?.name ?? 'the bathroom';
-    if (m.isPlayer) {
-      this.sound.gurgle();
-      this.shake = Math.max(this.shake, 0.2);
-      this.hud.showBanner('GUT EMERGENCY!', `Get to a bidet in ${EMERGENCY_TIME}s! Nearest: ${room}.`, 'brown', 3);
-      this.queueHint('emergency', 'Follow the blue arrow to the nearest toilet. Every toilet has a bidet. You can’t attack while clenching.', true);
-    } else if (this.role === 'eddie') {
-      this.queueHint('zachRuns', 'Zach is sprint-waddling to the bathroom. Honestly? Let him go.');
-    } else {
-      this.queueHint('allyGut', 'Zach has a gut emergency. He’s on his own for a minute.');
-    }
-  }
-
   private sitOnToilet(m: Messer, i: number) {
     const t = this.house.toilets[i];
     m.toilet = i;
@@ -1356,6 +1431,7 @@ export class Game {
     if (m.isPlayer) {
       this.stopCharge();
       this.puke.hideAim();
+      this.hud.hideBanner();
     }
   }
 
@@ -1370,24 +1446,19 @@ export class Game {
     m.facing = t.facing;
     const audible = m.isPlayer || this.near(m.position);
     const head = m.head(new THREE.Vector3()).add(new THREE.Vector3(0, 0.3, 0));
-    if (crossed(0.35)) {
-      this.stats.braps += 1;
+    if (crossed(0.4)) {
       if (audible) this.sound.brap();
-      this.worldUi.pop(head, pick(POP.brap), 'brown');
-      for (let i = 0; i < 6; i += 1) this.effects.gas(m.position.clone().setY(0.5 + i * 0.05));
-      if (m.isPlayer) this.shake = Math.max(this.shake, 0.18);
+      this.worldUi.pop(head, 'pfft.', 'brown');
+      this.effects.gas(m.position.clone().setY(0.6));
     }
-    if (crossed(1.6)) {
-      this.worldUi.pop(head, pick(POP.brap), 'brown');
-      if (audible) this.sound.brap();
-    }
-    if (crossed(2.6)) {
+    if (crossed(1.0)) {
+      this.stats.braps += m.isPlayer ? 1 : 0;
       if (audible) this.sound.bidet();
       this.worldUi.pop(head, 'BIDET!', 'blue');
       this.say('zach', ZACH.toilet.next(), 'calm', 1.8);
     }
-    if (k > 2.6 && k < 3.9 && Math.floor(k * 12) !== Math.floor(prev * 12)) this.puke.bidet(t.nozzle);
-    if (crossed(4.0)) {
+    if (k > 1.0 && k < 2.4 && Math.floor(k * 12) !== Math.floor(prev * 12)) this.puke.bidet(t.nozzle);
+    if (crossed(2.7)) {
       if (audible) this.sound.flush();
       m.toilet = -1;
       m.bloat = 0;
@@ -1446,7 +1517,6 @@ export class Game {
     m.vel.set(0, 0, 0);
     m.timeout = seconds;
     m.emergency = 0;
-    m.bloat = Math.min(m.bloat, 30);
     m.toilet = -1;
     m.swoleUsed = false;
     m.charging = false;
@@ -1893,7 +1963,7 @@ export class Game {
             ['Best combo', `x${this.maxCombo}`],
             [role === 'zach' ? 'Food eaten' : 'Snacks eaten', String(this.stats.eaten)],
           ];
-    if (role === 'zach') stats.push(['Bidet visits', String(this.stats.braps)], ['Flexed free', String(this.stats.swole)]);
+    if (role === 'zach') stats.push(['Gut blasts', String(this.stats.blasts)], ['Bidet visits', String(this.stats.braps)], ['Flexed free', String(this.stats.swole)]);
     if (won && role !== 'eddie') stats.push(['Time bonus', `+${timeBonus}`], ['Heart bonus', `+${lifeBonus}`]);
     if (won && role === 'eddie') stats.push(['Couch bonus', `+${lifeBonus}`]);
     $('end-stats').innerHTML = stats.map(([k, v]) => `<div class="stat"><b>${v}</b><span>${k}</span></div>`).join('');
@@ -1910,7 +1980,7 @@ export class Game {
   private readonly pickupHost: PickupHost = {
     canCollect: (kind: PickupKind, who: MesserId) => {
       const m = who === 'theo' ? this.theo : this.zach;
-      if (kind === 'food' || kind === 'feast') return m.ammo < 96 && m.emergency <= 0;
+      if (kind === 'food' || kind === 'feast') return m.emergency <= 0 && (m.ammo < 96 || (m.id === 'zach' && m.bloat < 100));
       if (kind === 'toy') return !m.hasToy;
       return true;
     },
@@ -1922,7 +1992,7 @@ export class Game {
         case 'feast': {
           const f = FOOD[food ?? 'nuggets'];
           m.ammo = Math.min(100, m.ammo + f.ammo);
-          if (m.id === 'zach') m.bloat = Math.min(100, m.bloat + f.bloat);
+          this.addBloat(m, f.bloat);
           m.play('eat', 0.9);
           if (m.isPlayer) this.stats.eaten += 1;
           if (audible) this.sound.chomp();
@@ -1930,7 +2000,7 @@ export class Game {
           if (m.id === 'zach') this.puke.crumbs(m.mouth(), 8);
           if (kind === 'feast') {
             this.makeNoise(at, 8, 'splat');
-            if (this.role !== 'eddie') this.hud.showBanner('FRIDGE RAID!', m.id === 'zach' ? 'A whole rotisserie chicken. Your gut has concerns.' : 'A whole rotisserie chicken. Full tummy!', 'gold', 2.2);
+            if (m.isPlayer && m.bloat < 100) this.hud.showBanner('FRIDGE RAID!', m.id === 'zach' ? 'A whole rotisserie chicken. Your gut is filling up nicely.' : 'A whole rotisserie chicken. Full tummy!', 'gold', 2.2);
           }
           if (m.isPlayer || Math.random() < 0.5) this.say(m.id, m.id === 'zach' ? ZACH.eat.next() : THEO.eat.next(), 'calm', 1.4);
           break;
@@ -1952,13 +2022,13 @@ export class Game {
         case 'burrito': {
           m.ammo = 100;
           m.burrito = 3;
-          if (m.id === 'zach') m.bloat = Math.min(100, m.bloat + FOOD.burrito.bloat);
+          this.addBloat(m, FOOD.burrito.bloat);
           m.play('eat', 1);
           if (audible) {
             this.sound.chomp();
             this.sound.fanfare();
           }
-          if (m.isPlayer) this.hud.showBanner('MYSTERY BURRITO!', m.id === 'zach' ? 'Next 3 shots are free and extra saucy. Your gut is filing paperwork.' : 'Your next 3 hurls are free and extra chunky.', 'gold', 2.6);
+          if (m.isPlayer && m.id === 'theo') this.hud.showBanner('MYSTERY BURRITO!', 'Your next 3 hurls are free and extra chunky.', 'gold', 2.6);
           else this.worldUi.pop(at.clone().setY(1.4), `${m.name.toUpperCase()} GOT THE BURRITO!`, 'gold');
           break;
         }
@@ -2206,7 +2276,8 @@ export class Game {
   private allyStatus(m: Messer) {
     if (m.timeout > 0) return `${m.name}: time-out ${Math.ceil(m.timeout)}s`;
     if (m.toilet >= 0) return `${m.name}: on the toilet`;
-    if (m.emergency > 0) return `${m.name}: gut emergency!`;
+    if (m.emergency > 0) return `${m.name}: running to the bidet`;
+    if (m.gutReady) return `${m.name}: gut loaded`;
     if (m.frozen > 0) return `${m.name}: frozen`;
     return null;
   }
@@ -2238,6 +2309,7 @@ export class Game {
       stamina: m ? m.stamina : this.eddie.stamina,
       tired: m ? m.tired : this.eddie.tired,
       bloat: this.zach.bloat,
+      gutReady: Boolean(m && m.gutReady),
       emergency: m ? m.emergency : 0,
       eddie: this.eddie.status(m ? m.id : null),
       rage: this.rage,

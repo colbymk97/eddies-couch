@@ -41,6 +41,6 @@ export interface Puddle {
   style: MessStyle;
 }
 
-export type MessStyle = 'puke' | 'sauce';
+export type MessStyle = 'puke' | 'sauce' | 'brown';
 
 export type Mood = 'angry' | 'calm' | 'sad' | 'sleepy' | 'shout';

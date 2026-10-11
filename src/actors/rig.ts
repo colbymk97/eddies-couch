@@ -32,7 +32,8 @@ export type Anim =
   | 'carried'
   | 'celebrate'
   | 'sulk'
-  | 'yell';
+  | 'yell'
+  | 'blast';
 
 export interface RigSpec {
   id: 'theo' | 'zach' | 'eddie';
@@ -158,6 +159,8 @@ export class HumanRig {
   readonly emitter = new THREE.Object3D();
   readonly earL = new THREE.Object3D();
   readonly earR = new THREE.Object3D();
+  /** Behind the hips. For Zach's power-up. */
+  readonly rear = new THREE.Object3D();
   readonly hipHeight: number;
   readonly height: number;
   private readonly rest: Pose;
@@ -208,6 +211,9 @@ export class HumanRig {
     // Pelvis + belt.
     mesh(roundedBoxGeo(s.pelvis[0], s.pelvis[1], s.pelvis[2], 0.06), pants, 0, 0.02, 0, { parent: this.hips });
     if (!s.shorts) mesh(roundedBoxGeo(s.pelvis[0] + 0.01, 0.035, s.pelvis[2] + 0.01, 0.015), std(0x4a2f1e, { roughness: 0.5 }), 0, s.pelvis[1] / 2, 0, { parent: this.hips });
+
+    this.rear.position.set(0, -0.02, -(s.pelvis[2] / 2 + 0.04));
+    this.hips.add(this.rear);
 
     // Torso.
     this.torso.position.y = 0.06;
@@ -939,6 +945,33 @@ export class HumanRig {
         mouthOpen = 1.5;
         brow = 0.2;
         break;
+      case 'blast': {
+        // Bent over, hands on knees, looking back over the shoulder. Trembles while it builds.
+        const c = amount;
+        target.hipY = H * (0.9 + Math.sin(t * 50) * 0.006 * c);
+        target.hipPitch = -0.15;
+        target.torsoPitch = 0.85 + Math.sin(t * 43) * 0.03 * c;
+        target.torsoRoll = Math.sin(t * 37) * 0.05 * c;
+        target.legL = -0.2;
+        target.legR = -0.2;
+        target.legLZ = -0.12;
+        target.legRZ = 0.12;
+        target.knL = 0.45;
+        target.knR = 0.45;
+        target.shLX = -1.0;
+        target.shRX = -1.0;
+        target.shLZ = -0.15;
+        target.shRZ = 0.15;
+        target.elL = -0.25;
+        target.elR = -0.25;
+        target.headPitch = -0.7;
+        target.headYaw = 0.85;
+        brow = c > 0.95 ? 1 : -0.3 - c * 0.5;
+        eyeOpen = c > 0.95 ? 1.4 : 1 - c * 0.7;
+        mouthOpen = c > 0.95 ? 2.2 : 0.3;
+        damping = 16;
+        break;
+      }
       case 'sulk':
         target.shLX = -1.0;
         target.shRX = -1.0;

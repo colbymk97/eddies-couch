@@ -64,6 +64,14 @@ export const EDDIE = {
   ]),
   cleaned: new LineDeck(['There. Pristine.', '*sniff* ...still smells like carrots.', 'Back to normal, baby.', 'Not a single crumb. Perfect.']),
   dirty: new LineDeck(['¿¡QUÉ ES ESTO!?', 'A STAIN?! On MY cushion?!', 'Oh no. Oh no no no.', 'Is that... honey mustard?!']),
+  brown: new LineDeck([
+    'IS THAT— NO. NO NO NO NO.',
+    'ZACH!!! WHAT DID YOU EAT?!',
+    "I'm going to need a priest. And a power washer.",
+    '¡DIOS MÍO! ¡¿POR QUÉ?!',
+    "That's not a stain. That's a crime scene.",
+  ]),
+  smell: new LineDeck(['What is that SMELL?!', '*sniff* ...oh no. Zach.', 'Somebody open a WINDOW!']),
   slip: new LineDeck(['WHOA-WHOA-WHOA—', '¡AY, MI ESPALDA!', 'Not again...', 'Who put that THERE?!']),
   catch: new LineDeck(['¡TE TENGO!', 'GOTCHA!', 'Time-out. NOW.', 'Caught you!']),
   catchZach: new LineDeck(['GOT YOU, ZACH!', "You're too heavy— I got you anyway!", 'Sauce privileges REVOKED!']),
@@ -89,10 +97,11 @@ export const ZACH = {
   eat: new LineDeck(['Protein.', 'Gains.', '*crunch*', 'Bro, these nuggets slap.', 'Chicken is a food group.', 'Bulking season.']),
   fling: new LineDeck(['SAUCED.', 'Extra saucy.', 'Dip THAT.', 'Nugget delivery!']),
   empty: new LineDeck(['Out of sauce. Need meat.', 'Bottle empty, bro.', 'Need to refuel.']),
-  gurgle: new LineDeck(['...uh oh.', 'That was a lot of nuggets.', 'My stomach just said something.', 'Bro. My gut.']),
-  emergency: new LineDeck(['Oh no. Oh NO.', 'BATHROOM. NOW.', 'Not now, not now, not now...', 'Where is the BIDET?!']),
-  cantAttack: new LineDeck(["Can't! Busy clenching!", 'No time! Bathroom!', 'Not now, bro!']),
-  toilet: new LineDeck(['Ahhh. The bidet.', 'Eddie, your bidet is incredible.', 'Warm water setting. Respect.', 'Every toilet has one. Legend.']),
+  ready: new LineDeck(['...oh. Oh, it’s ready.', 'My gut is FULLY loaded.', 'Bro. I can feel it.', 'That was a lot of nuggets.']),
+  blast: new LineDeck(['Worth it.', 'Sorry, Eddie.', 'That one was for Biscuit.', '...I regret nothing.']),
+  needBidet: new LineDeck(['BIDET. NOW.', 'Where is the BIDET?!', 'Okay. Bathroom. Bathroom!', 'Not my finest moment. Bidet!']),
+  cantAttack: new LineDeck(['Bidet first, bro!', 'No time! Bathroom!', 'Not now, bro!']),
+  toilet: new LineDeck(['Ahhh. The bidet.', 'Eddie, your bidet is incredible.', 'Warm water setting. Respect.', 'Every toilet has one. Legend.', 'Pressure: perfect.']),
   clean: new LineDeck(['Squeaky clean.', 'Like a new man.', 'Refreshed. Ready.']),
   swole: new LineDeck(['TOO SWOLE.', "You can't hold all this, Eddie.", 'Leg day, bro.', 'Nice try.']),
   caught: new LineDeck(['Bro! BRO!', 'Okay okay okay!', 'Not the face!']),
@@ -106,6 +115,7 @@ export const POP = {
   floor: ['splat.', 'blorp.', 'plop.'],
   plastic: ['SLIDES OFF THE PLASTIC!', 'BOING! Plastic popped!'],
   brap: ['BRRRAP!', 'PFFFRRT!', 'BRRT!', 'BLORRRP!'],
+  brown: ['SPLATTT!', 'BRRRAP!', 'OH NO!', 'BIOHAZARD!', 'GROSS!', 'DIRECT HIT!'],
 };
 
 export const TIPS = [
@@ -121,7 +131,8 @@ export const TIPS = [
   'Nobody sits on the white couch.',
   'Every toilet in this house has a bidet. Eddie insists.',
   'Zach can flex out of Eddie’s grip once per life. Too swole.',
-  'The more Zach eats, the sooner his gut files a complaint. Know where the bathrooms are.',
+  'Zach’s gut fills as he eats. A full gut is a power-up. Afterwards: bidet, immediately.',
+  'Zach is slow and can’t attack on the way to the bidet. Eddie knows this.',
   'There is a whole rotisserie chicken in Eddie’s fridge. Not for long.',
   'As Eddie: hold GRAB next to a stained seat to scrub it. YELL freezes everybody nearby.',
 ];

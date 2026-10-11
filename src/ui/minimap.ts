@@ -115,7 +115,7 @@ export class Minimap {
     // Puddles.
     for (const p of s.puddles) {
       if (!p.active) continue;
-      ctx.fillStyle = p.style === 'sauce' ? 'rgba(170, 60, 25, 0.65)' : 'rgba(155, 209, 59, 0.6)';
+      ctx.fillStyle = p.style === 'sauce' ? 'rgba(170, 60, 25, 0.65)' : p.style === 'brown' ? 'rgba(110, 70, 35, 0.75)' : 'rgba(155, 209, 59, 0.6)';
       ctx.beginPath();
       ctx.arc(p.position.x, p.position.z, p.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -124,7 +124,8 @@ export class Minimap {
     // Couches.
     for (const couch of s.couches) {
       for (const seat of couch.seats) {
-        ctx.fillStyle = seat.messed ? (couch.ruined ? (seat.mess === 'sauce' ? '#c0532a' : '#9bd13b') : '#ffc93c') : '#f4efe6';
+        const ruinedColor = seat.mess === 'sauce' ? '#c0532a' : seat.mess === 'brown' ? '#7a5230' : '#9bd13b';
+        ctx.fillStyle = seat.messed ? (couch.ruined ? ruinedColor : '#ffc93c') : '#f4efe6';
         ctx.strokeStyle = '#241730';
         ctx.lineWidth = 1.2 * px;
         ctx.beginPath();

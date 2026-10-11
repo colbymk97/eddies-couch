@@ -9,9 +9,10 @@ share those feelings. Pick a side:
 
 - **Theo** (age 4, rainbow glasses, weak stomach) hurls. He's small enough to hide under the dining
   table and the bed.
-- **Zach** (short, very buff, never without a drumstick) flings saucy nuggets and leaves crumbs
-  everywhere. He can flex out of Eddie's grip once per life. He also eats a lot, and when his gut goes
-  critical he has to make it to a toilet. Every toilet in the house has a bidet.
+- **Zach** (short, very buff, never without a drumstick) eats meat, flings saucy nuggets and leaves
+  crumbs everywhere. He can flex out of Eddie's grip once per life. Everything he eats fills his gut,
+  and a full gut is his power-up: he turns around and lets it rip. Then he has to make it to a bidet.
+  Every toilet in the house has one.
 - **Eddie** (round gold glasses, gingham, spray bottle) has to keep the house clean until bedtime.
 
 Whoever you don't pick is played by the computer.
@@ -24,6 +25,9 @@ Whoever you don't pick is played by the computer.
 - Eat nuggets, drumsticks and mac & cheese to refill. Eddie's fridge has a whole rotisserie chicken.
 - Eddie scrubs half-messed couches clean. Finish a couch and it's ruined forever.
 - Missed shots leave puddles. Eddie slips on puddles.
+- Zach: tap to fling nuggets. When his gut meter is full, hold to aim the power-up (he backs up to the
+  couch), then get to a bidet before the timer runs out or it's a code brown. He's slow and can't attack
+  on the way, so Eddie can still grab him.
 - Throw squeaky toys to lure Eddie away, drink juice for the zoomies, and keep an eye on the microwave.
 - Get caught three times and it's time-out for good.
 

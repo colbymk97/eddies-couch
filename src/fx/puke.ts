@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js';
-import { pukeSplatTexture, sauceSplatTexture } from '../world/textures';
+import { brownSplatTexture, pukeSplatTexture, sauceSplatTexture } from '../world/textures';
 import type { MessStyle, Puddle, Seat } from '../game/types';
 import { TAU, clamp, easeOutBack, rand } from '../core/util';
 
@@ -37,10 +37,12 @@ interface Flung {
 const PUKE_COLORS = [0x9fcf3a, 0xb4d84a, 0x8cbf2f, 0xc9df5c, 0xa6c93a, 0xe08a2a, 0xe8c27a];
 const SAUCE_COLORS = [0x8e2b14, 0xa3361b, 0x7a2410, 0xb8481f, 0x5e1c0c, 0xc7531f];
 const CRUMB_COLORS = [0xd9a24a, 0xe8b860, 0xc98a3a, 0xf0c878, 0xb87a2e];
+const BROWN_COLORS = [0x6b4423, 0x5a3a1e, 0x7a5230, 0x4a2f17, 0x8b5e34];
 const WATER = 0xd8f3ff;
 const MIST = 0xbfe6ff;
 
 function pickColor(style: MessStyle) {
+  if (style === 'brown') return BROWN_COLORS[Math.floor(Math.random() * BROWN_COLORS.length)];
   if (style === 'sauce') return Math.random() < 0.3 ? CRUMB_COLORS[Math.floor(Math.random() * CRUMB_COLORS.length)] : SAUCE_COLORS[Math.floor(Math.random() * SAUCE_COLORS.length)];
   return PUKE_COLORS[Math.floor(Math.random() * PUKE_COLORS.length)];
 }
@@ -105,6 +107,7 @@ export class PukeSystem {
     this.decalMaterials = {
       puke: [0, 1, 2, 3].map((i) => decal(pukeSplatTexture(i))),
       sauce: [0, 1, 2, 3].map((i) => decal(sauceSplatTexture(i))),
+      brown: [0, 1, 2, 3].map((i) => decal(brownSplatTexture(i))),
     };
     this.puddleGeo.rotateX(-Math.PI / 2);
 
@@ -339,7 +342,7 @@ export class PukeSystem {
   showArc(start: THREE.Vector3, target: THREE.Vector3, radius: number, time: number, style: MessStyle = 'puke') {
     this.arcDots.visible = true;
     this.ring.visible = true;
-    const tint = style === 'sauce' ? 0xff9a3d : 0xd8ff6a;
+    const tint = style === 'sauce' ? 0xff9a3d : style === 'brown' ? 0xc89a5a : 0xd8ff6a;
     (this.arcDots.material as THREE.MeshBasicMaterial).color.setHex(tint);
     (this.ring.material as THREE.MeshBasicMaterial).color.setHex(tint);
     const n = this.arcDots.count;
