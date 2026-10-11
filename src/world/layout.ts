@@ -9,7 +9,7 @@ export const HOUSE = {
   wallThickness: 0.24,
 };
 
-export type FloorKind = 'wood' | 'tile' | 'carpetDen' | 'carpetBed';
+export type FloorKind = 'wood' | 'tile' | 'carpetDen' | 'carpetBed' | 'bathTile';
 
 export interface RoomDef {
   id: string;
@@ -22,7 +22,10 @@ export interface RoomDef {
   wall: WallpaperKind;
 }
 
+// Bathrooms come first: they sit inside the den and bedroom rectangles.
 export const ROOMS: RoomDef[] = [
+  { id: 'bath1', name: 'Guest Bath', minX: -6, maxX: -3, minZ: 0.5, maxZ: 3, floor: 'bathTile', wall: 'bath' },
+  { id: 'bath2', name: 'Master Bath', minX: 10, maxX: 13, minZ: 6.6, maxZ: 9, floor: 'bathTile', wall: 'bath' },
   { id: 'kitchen', name: 'Kitchen', minX: -13, maxX: -3, minZ: -9, maxZ: 0.5, floor: 'tile', wall: 'kitchen' },
   { id: 'den', name: 'The Den', minX: -13, maxX: -3, minZ: 0.5, maxZ: 9, floor: 'carpetDen', wall: 'den' },
   { id: 'hall', name: 'Hall of Dogs', minX: -3, maxX: 2, minZ: -9, maxZ: 9, floor: 'wood', wall: 'hall' },
@@ -41,18 +44,25 @@ export interface WallDef {
   from: number;
   to: number;
   doors?: [number, number][];
+  /** Extra breaks so each wall piece only faces one room (and gets that room's wallpaper). */
+  splits?: number[];
   exterior?: boolean;
 }
 
 export const WALLS: WallDef[] = [
-  { axis: 'x', at: -9, from: -13.12, to: 13.12, exterior: true },
-  { axis: 'x', at: 9, from: -13.12, to: 13.12, exterior: true },
-  { axis: 'z', at: -13, from: -9, to: 9, exterior: true },
-  { axis: 'z', at: 13, from: -9, to: 9, exterior: true },
-  { axis: 'z', at: -3, from: -8.88, to: 8.88, doors: [[-5.6, -3.8], [3.6, 5.4]] },
-  { axis: 'z', at: 2, from: -8.88, to: 8.88, doors: [[-3.4, -1.6], [4.4, 6.2]] },
-  { axis: 'x', at: 0.5, from: -12.88, to: -3.12, doors: [[-9.4, -7.6]] },
+  { axis: 'x', at: -9, from: -13.12, to: 13.12, splits: [-3, 2], exterior: true },
+  { axis: 'x', at: 9, from: -13.12, to: 13.12, splits: [-3, 2, 10], exterior: true },
+  { axis: 'z', at: -13, from: -9, to: 9, splits: [0.5], exterior: true },
+  { axis: 'z', at: 13, from: -9, to: 9, splits: [1, 6.6], exterior: true },
+  { axis: 'z', at: -3, from: -8.88, to: 8.88, doors: [[-5.6, -3.8], [3.6, 5.4]], splits: [0.5, 3] },
+  { axis: 'z', at: 2, from: -8.88, to: 8.88, doors: [[-3.4, -1.6], [4.4, 6.2]], splits: [1] },
+  { axis: 'x', at: 0.5, from: -12.88, to: -3.12, doors: [[-9.4, -7.6]], splits: [-6] },
   { axis: 'x', at: 1, from: 2.12, to: 12.88, doors: [[6.6, 8.4]] },
+  // Guest bath (den corner) and master bath (bedroom corner).
+  { axis: 'z', at: -6, from: 0.62, to: 2.88 },
+  { axis: 'x', at: 3, from: -6.12, to: -3.12, doors: [[-5.45, -4.25]] },
+  { axis: 'x', at: 6.6, from: 9.88, to: 12.88 },
+  { axis: 'z', at: 10, from: 6.72, to: 8.88, doors: [[7.15, 8.35]] },
 ];
 
 export interface WindowDef {
@@ -67,8 +77,7 @@ export const WINDOWS: WindowDef[] = [
   { side: 'north', center: 4.0, width: 1.5, curtains: '#c0392b' },
   { side: 'north', center: 11.4, width: 1.5, curtains: '#c0392b' },
   { side: 'south', center: -10.6, width: 1.5, curtains: '#6c3483' },
-  { side: 'south', center: 10.8, width: 1.5, curtains: '#2e86c1' },
-  { side: 'south', center: -0.5, width: 1.2 },
+  { side: 'south', center: 11.4, width: 1.0 },
   { side: 'west', center: -7.3, width: 1.1 },
   { side: 'west', center: 7.6, width: 1.3, curtains: '#6c3483' },
   { side: 'east', center: -5.0, width: 1.5, curtains: '#c0392b' },
@@ -209,8 +218,28 @@ export const COUCHES: CouchDef[] = [
 
 export const TOTAL_SEATS = COUCHES.reduce((sum, c) => sum + c.segments.reduce((s, seg) => s + seg.seats, 0), 0);
 
-export const THEO_SPAWN = { x: -0.5, z: 7.3 };
+/** The time-out corner at the south end of the hall: where mess-makers start and get sent. */
+export const SPAWNS = {
+  theo: { x: -1.1, z: 7.5 },
+  zach: { x: 0.1, z: 7.5 },
+  eddie: { x: 5.6, z: -4.6 },
+};
 export const EDDIE_BED = { x: 3.75, z: -6.55 };
+
+export interface ToiletDef {
+  x: number;
+  z: number;
+  /** Yaw the toilet faces. */
+  rot: number;
+}
+
+/** Every toilet in the house has a bidet. Eddie insists. */
+export const TOILETS: ToiletDef[] = [
+  { x: -3.78, z: 1.0, rot: 0 },
+  { x: 12.5, z: 8.15, rot: -Math.PI / 2 },
+];
+
+export const FRIDGE_RAID = { x: -4.0, z: -7.65 };
 
 export const PATROL_POINTS: [number, number][] = [
   [5.0, -4.6],
@@ -231,10 +260,10 @@ export const PATROL_POINTS: [number, number][] = [
   [8.4, 6.4],
 ];
 
-export const BUN_SPOTS: [number, number][] = [
+export const FOOD_SPOTS: [number, number][] = [
   [-6.9, -6.7],
   [-10.6, -6.6],
-  [-6.4, 3.0],
+  [-6.9, 3.5],
   [-10.2, 7.4],
   [0.9, -4.8],
   [-1.7, 2.6],
@@ -246,7 +275,7 @@ export const BUN_SPOTS: [number, number][] = [
 
 export const JUICE_SPOTS: [number, number][] = [
   [-1.8, -1.2],
-  [11.9, 7.9],
+  [5.4, 3.8],
   [-11.6, 1.6],
 ];
 
@@ -259,7 +288,7 @@ export const TRASH_CANS: [number, number][] = [
   [-5.15, -8.35],
   [-12.35, -0.25],
   [12.4, -2.3],
-  [-3.65, 1.3],
+  [-6.45, 1.05],
   [2.55, 3.1],
 ];
 

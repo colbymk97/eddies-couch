@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { DecalGeometry } from 'three/examples/jsm/geometries/DecalGeometry.js';
-import { pukeSplatTexture } from '../world/textures';
-import type { Puddle, Seat } from '../game/types';
+import { pukeSplatTexture, sauceSplatTexture } from '../world/textures';
+import type { MessStyle, Puddle, Seat } from '../game/types';
 import { TAU, clamp, easeOutBack, rand } from '../core/util';
 
 const GRAVITY = 13;
@@ -20,9 +20,30 @@ export interface Shot {
   emitAccumulator: number;
   landed: boolean;
   onLand: () => void;
+  style: MessStyle;
+}
+
+interface Flung {
+  mesh: THREE.Mesh;
+  from: THREE.Vector3;
+  to: THREE.Vector3;
+  t: number;
+  flight: number;
+  peak: number;
+  landed: boolean;
+  linger: number;
 }
 
 const PUKE_COLORS = [0x9fcf3a, 0xb4d84a, 0x8cbf2f, 0xc9df5c, 0xa6c93a, 0xe08a2a, 0xe8c27a];
+const SAUCE_COLORS = [0x8e2b14, 0xa3361b, 0x7a2410, 0xb8481f, 0x5e1c0c, 0xc7531f];
+const CRUMB_COLORS = [0xd9a24a, 0xe8b860, 0xc98a3a, 0xf0c878, 0xb87a2e];
+const WATER = 0xd8f3ff;
+const MIST = 0xbfe6ff;
+
+function pickColor(style: MessStyle) {
+  if (style === 'sauce') return Math.random() < 0.3 ? CRUMB_COLORS[Math.floor(Math.random() * CRUMB_COLORS.length)] : SAUCE_COLORS[Math.floor(Math.random() * SAUCE_COLORS.length)];
+  return PUKE_COLORS[Math.floor(Math.random() * PUKE_COLORS.length)];
+}
 
 export class PukeSystem {
   private readonly mesh: THREE.InstancedMesh;
@@ -39,10 +60,13 @@ export class PukeSystem {
   private readonly color = new THREE.Color();
 
   readonly puddles: Puddle[] = [];
-  private readonly decalMaterials: THREE.MeshPhysicalMaterial[];
+  private readonly decalMaterials: Record<MessStyle, THREE.MeshPhysicalMaterial[]>;
+  private readonly flung: Flung[] = [];
+  private readonly nuggetGeo = new THREE.CapsuleGeometry(0.05, 0.05, 4, 8);
+  private readonly nuggetMat = new THREE.MeshStandardMaterial({ color: 0xd9962f, roughness: 0.75 });
   private readonly puddleGeo = new THREE.PlaneGeometry(1, 1);
   private readonly growing: { mesh: THREE.Mesh; age: number; scale: number }[] = [];
-  private readonly drippers: { seat: Seat; time: number; next: number }[] = [];
+  private readonly drippers: { seat: Seat; time: number; next: number; style: MessStyle }[] = [];
   private puddleLayer = 0;
 
   // Aiming visuals.
@@ -66,20 +90,22 @@ export class PukeSystem {
     }
     scene.add(this.mesh);
 
-    this.decalMaterials = [0, 1, 2, 3].map(
-      (i) =>
-        new THREE.MeshPhysicalMaterial({
-          map: pukeSplatTexture(i),
-          transparent: true,
-          depthWrite: false,
-          polygonOffset: true,
-          polygonOffsetFactor: -4,
-          polygonOffsetUnits: -4,
-          roughness: 0.3,
-          clearcoat: 1,
-          clearcoatRoughness: 0.12,
-        }),
-    );
+    const decal = (map: THREE.Texture) =>
+      new THREE.MeshPhysicalMaterial({
+        map,
+        transparent: true,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
+        polygonOffsetUnits: -4,
+        roughness: 0.3,
+        clearcoat: 1,
+        clearcoatRoughness: 0.12,
+      });
+    this.decalMaterials = {
+      puke: [0, 1, 2, 3].map((i) => decal(pukeSplatTexture(i))),
+      sauce: [0, 1, 2, 3].map((i) => decal(sauceSplatTexture(i))),
+    };
     this.puddleGeo.rotateX(-Math.PI / 2);
 
     // Trajectory preview.
@@ -120,7 +146,7 @@ export class PukeSystem {
 
   // ---------------------------------------------------------------- particles
 
-  private spawn(kind: Kind, x: number, y: number, z: number, vx: number, vy: number, vz: number, size: number, floorY: number, life = 3) {
+  private spawn(kind: Kind, x: number, y: number, z: number, vx: number, vy: number, vz: number, size: number, floorY: number, life = 3, color: number = PUKE_COLORS[0]) {
     const i = this.cursor;
     this.cursor = (this.cursor + 1) % MAX_PARTICLES;
     this.active[i] = 1;
@@ -134,13 +160,12 @@ export class PukeSystem {
     this.size[i] = size;
     this.floor[i] = floorY;
     this.life[i] = life;
-    if (kind === 2) this.mesh.setColorAt(i, this.color.setHex(0xbfe6ff));
-    else this.mesh.setColorAt(i, this.color.setHex(PUKE_COLORS[Math.floor(Math.random() * PUKE_COLORS.length)]));
+    this.mesh.setColorAt(i, this.color.setHex(color));
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
   }
 
-  /** Launches a stream of puke from Theo's mouth toward a landing point. */
-  fire(start: () => THREE.Vector3, target: THREE.Vector3, spread: number, power: number, onLand: () => void) {
+  /** Launches a stream of puke (or sauce) from a mouth or bottle toward a landing point. */
+  fire(start: () => THREE.Vector3, target: THREE.Vector3, spread: number, power: number, onLand: () => void, style: MessStyle = 'puke') {
     const from = start();
     const distance = Math.hypot(target.x - from.x, target.z - from.z);
     this.shots.push({
@@ -154,38 +179,81 @@ export class PukeSystem {
       emitAccumulator: 0,
       landed: false,
       onLand,
+      style,
     });
   }
 
-  splash(at: THREE.Vector3, count: number, strength = 1) {
+  /** Lobs a single chicken nugget along an arc. It sits where it lands for a while. */
+  fling(from: THREE.Vector3, to: THREE.Vector3, onLand: () => void) {
+    const mesh = new THREE.Mesh(this.nuggetGeo, this.nuggetMat);
+    mesh.scale.set(1, 1, 1.3);
+    mesh.position.copy(from);
+    mesh.castShadow = true;
+    this.scene.add(mesh);
+    const distance = Math.hypot(to.x - from.x, to.z - from.z);
+    const flight = 0.3 + distance * 0.07;
+    this.flung.push({ mesh, from: from.clone(), to: to.clone(), t: 0, flight, peak: 0.5 + distance * 0.12, landed: false, linger: 5 });
+    // Reuse the shot bookkeeping so the landing callback fires on time.
+    this.shots.push({
+      start: () => from,
+      target: to.clone(),
+      spread: 0,
+      power: 0,
+      flight,
+      emitFor: 0,
+      age: 0,
+      emitAccumulator: 0,
+      landed: false,
+      onLand,
+      style: 'sauce',
+    });
+  }
+
+  splash(at: THREE.Vector3, count: number, strength = 1, style: MessStyle = 'puke') {
     for (let i = 0; i < count; i += 1) {
       const a = rand(0, TAU);
       const s = rand(0.6, 2.2) * strength;
-      this.spawn(1, at.x, at.y + 0.05, at.z, Math.cos(a) * s, rand(1.2, 3.2) * strength, Math.sin(a) * s, rand(0.025, 0.05), at.y, rand(0.5, 0.9));
+      this.spawn(1, at.x, at.y + 0.05, at.z, Math.cos(a) * s, rand(1.2, 3.2) * strength, Math.sin(a) * s, rand(0.025, 0.05), at.y, rand(0.5, 0.9), pickColor(style));
+    }
+  }
+
+  /** Breading everywhere. */
+  crumbs(at: THREE.Vector3, count: number, floorY = 0.01) {
+    for (let i = 0; i < count; i += 1) {
+      const a = rand(0, TAU);
+      const s = rand(0.2, 0.9);
+      this.spawn(1, at.x, at.y, at.z, Math.cos(a) * s, rand(0.3, 1.2), Math.sin(a) * s, rand(0.012, 0.024), floorY, rand(1.4, 2.4), CRUMB_COLORS[i % CRUMB_COLORS.length]);
     }
   }
 
   spray(origin: THREE.Vector3, dir: THREE.Vector3) {
     for (let i = 0; i < 10; i += 1) {
       const s = rand(2, 3.5);
-      this.spawn(2, origin.x, origin.y, origin.z, dir.x * s + rand(-0.4, 0.4), dir.y * s + rand(-0.2, 0.4), dir.z * s + rand(-0.4, 0.4), rand(0.015, 0.03), -10, rand(0.35, 0.6));
+      this.spawn(2, origin.x, origin.y, origin.z, dir.x * s + rand(-0.4, 0.4), dir.y * s + rand(-0.2, 0.4), dir.z * s + rand(-0.4, 0.4), rand(0.015, 0.03), -10, rand(0.35, 0.6), MIST);
     }
   }
 
-  /** Puke on Eddie's face during the catch cutscene. */
-  faceBlast(from: THREE.Vector3, to: THREE.Vector3) {
+  /** Every toilet in the house has a bidet. */
+  bidet(nozzle: THREE.Vector3) {
+    for (let i = 0; i < 14; i += 1) {
+      this.spawn(1, nozzle.x + rand(-0.03, 0.03), nozzle.y, nozzle.z + rand(-0.03, 0.03), rand(-0.35, 0.35), rand(2.2, 3.4), rand(-0.35, 0.35), rand(0.014, 0.026), nozzle.y - 0.05, rand(0.4, 0.7), WATER);
+    }
+  }
+
+  /** Puke (or sauce) on Eddie's face during the catch cutscene. */
+  faceBlast(from: THREE.Vector3, to: THREE.Vector3, style: MessStyle = 'puke') {
     for (let i = 0; i < 40; i += 1) {
       const t = 0.25;
       const vx = (to.x - from.x) / t + rand(-0.6, 0.6);
       const vy = (to.y - from.y) / t + 0.5 * GRAVITY * t + rand(-0.4, 0.6);
       const vz = (to.z - from.z) / t + rand(-0.6, 0.6);
-      this.spawn(1, from.x, from.y, from.z, vx * rand(0.7, 1.1), vy, vz * rand(0.7, 1.1), rand(0.035, 0.07), 0.01, 1.4);
+      this.spawn(1, from.x, from.y, from.z, vx * rand(0.7, 1.1), vy, vz * rand(0.7, 1.1), rand(0.035, 0.07), 0.01, 1.4, pickColor(style));
     }
   }
 
   // ---------------------------------------------------------------- surfaces
 
-  splatSeat(seat: Seat) {
+  splatSeat(seat: Seat, style: MessStyle = 'puke') {
     const cushion = seat.cushion;
     cushion.updateMatrixWorld(true);
     const helper = new THREE.Object3D();
@@ -198,7 +266,8 @@ export class PukeSystem {
     const center = new THREE.Vector3();
     geo.boundingBox?.getCenter(center);
     geo.translate(-center.x, -center.y, -center.z);
-    const decal = new THREE.Mesh(geo, this.decalMaterials[Math.floor(Math.random() * this.decalMaterials.length)]);
+    const mats = this.decalMaterials[style];
+    const decal = new THREE.Mesh(geo, mats[Math.floor(Math.random() * mats.length)]);
     decal.position.copy(center);
     decal.scale.setScalar(0.2);
     decal.renderOrder = 2;
@@ -206,7 +275,7 @@ export class PukeSystem {
     this.scene.add(decal);
     seat.decals.push(decal);
     this.growing.push({ mesh: decal, age: 0, scale: 1 });
-    this.drippers.push({ seat, time: 3.5, next: 0.2 });
+    this.drippers.push({ seat, time: 3.5, next: 0.2, style });
   }
 
   clearSeat(seat: Seat) {
@@ -217,8 +286,9 @@ export class PukeSystem {
     seat.decals.length = 0;
   }
 
-  addPuddle(at: THREE.Vector3, radius: number): Puddle {
-    const material = this.decalMaterials[Math.floor(Math.random() * this.decalMaterials.length)];
+  addPuddle(at: THREE.Vector3, radius: number, style: MessStyle = 'puke'): Puddle {
+    const mats = this.decalMaterials[style];
+    const material = mats[Math.floor(Math.random() * mats.length)];
     const mesh = new THREE.Mesh(this.puddleGeo, material);
     this.puddleLayer = (this.puddleLayer + 1) % 6;
     mesh.position.set(at.x, 0.014 + this.puddleLayer * 0.0015, at.z);
@@ -227,7 +297,7 @@ export class PukeSystem {
     mesh.renderOrder = 2;
     mesh.receiveShadow = true;
     this.scene.add(mesh);
-    const puddle: Puddle = { position: mesh.position.clone(), radius, active: true, mesh, age: 0, fade: 0 };
+    const puddle: Puddle = { position: mesh.position.clone(), radius, active: true, mesh, age: 0, fade: 0, style };
     this.puddles.push(puddle);
     this.growing.push({ mesh, age: 0, scale: radius * 2 });
     const live = this.puddles.filter((p) => p.active);
@@ -236,6 +306,12 @@ export class PukeSystem {
       live[0].fade = 1;
     }
     return puddle;
+  }
+
+  /** Mopped up: shrink it away. */
+  mop(puddle: Puddle) {
+    puddle.active = false;
+    puddle.fade = 0.5;
   }
 
   /** Eddie slid through it: smear and retire the puddle. */
@@ -252,15 +328,20 @@ export class PukeSystem {
     this.growing.length = 0;
     this.drippers.length = 0;
     this.shots.length = 0;
+    for (const f of this.flung) f.mesh.removeFromParent();
+    this.flung.length = 0;
     this.active.fill(0);
     this.hideAim();
   }
 
   // ---------------------------------------------------------------- aim visuals
 
-  showArc(start: THREE.Vector3, target: THREE.Vector3, radius: number, time: number) {
+  showArc(start: THREE.Vector3, target: THREE.Vector3, radius: number, time: number, style: MessStyle = 'puke') {
     this.arcDots.visible = true;
     this.ring.visible = true;
+    const tint = style === 'sauce' ? 0xff9a3d : 0xd8ff6a;
+    (this.arcDots.material as THREE.MeshBasicMaterial).color.setHex(tint);
+    (this.ring.material as THREE.MeshBasicMaterial).color.setHex(tint);
     const n = this.arcDots.count;
     const peak = 0.6 + start.distanceTo(target) * 0.12;
     for (let i = 0; i < n; i += 1) {
@@ -323,7 +404,9 @@ export class PukeSystem {
           const vx = (tx - from.x) / t;
           const vz = (tz - from.z) / t;
           const vy = (shot.target.y - from.y) / t + 0.5 * GRAVITY * t;
-          this.spawn(0, from.x, from.y, from.z, vx, vy, vz, rand(0.04, 0.085) * (0.85 + shot.power * 0.5), shot.target.y, 3);
+          const color = pickColor(shot.style);
+          const crumb = CRUMB_COLORS.includes(color);
+          this.spawn(0, from.x, from.y, from.z, vx, vy, vz, rand(0.04, 0.085) * (0.85 + shot.power * 0.5) * (crumb ? 0.45 : 1), shot.target.y, 3, color);
         }
       }
       if (!shot.landed && shot.age >= shot.flight) {
@@ -331,6 +414,30 @@ export class PukeSystem {
         shot.onLand();
       }
       if (shot.age > shot.emitFor + shot.flight + 0.3) this.shots.splice(s, 1);
+    }
+
+    // Flying nuggets.
+    for (let i = this.flung.length - 1; i >= 0; i -= 1) {
+      const f = this.flung[i];
+      if (!f.landed) {
+        f.t += dt;
+        const k = Math.min(1, f.t / f.flight);
+        f.mesh.position.lerpVectors(f.from, f.to, k);
+        f.mesh.position.y += Math.sin(k * Math.PI) * f.peak;
+        f.mesh.rotation.set(k * 11, k * 7, 0);
+        if (k >= 1) {
+          f.landed = true;
+          f.mesh.position.y = f.to.y + 0.04;
+          f.mesh.rotation.set(Math.PI / 2, rand(0, TAU), 0);
+        }
+      } else {
+        f.linger -= dt;
+        if (f.linger < 0.4) f.mesh.scale.setScalar(Math.max(0.01, f.linger / 0.4));
+        if (f.linger <= 0) {
+          f.mesh.removeFromParent();
+          this.flung.splice(i, 1);
+        }
+      }
     }
 
     // Drips off soaked seats.
@@ -342,7 +449,7 @@ export class PukeSystem {
         d.next = rand(0.25, 0.6);
         const fx = Math.sin(d.seat.facing) * 0.4;
         const fz = Math.cos(d.seat.facing) * 0.4;
-        this.spawn(1, d.seat.top.x + fx + rand(-0.25, 0.25), d.seat.top.y - 0.05, d.seat.top.z + fz + rand(-0.25, 0.25), 0, -0.2, 0, rand(0.02, 0.035), 0.01, 1.4);
+        this.spawn(1, d.seat.top.x + fx + rand(-0.25, 0.25), d.seat.top.y - 0.05, d.seat.top.z + fz + rand(-0.25, 0.25), 0, -0.2, 0, rand(0.02, 0.035), 0.01, 1.4, pickColor(d.style));
       }
       if (d.time <= 0) this.drippers.splice(i, 1);
     }
@@ -416,6 +523,7 @@ export class PukeSystem {
       pd.age += dt;
       if (!pd.active && pd.fade > 0) {
         pd.fade -= dt;
+        if (pd.fade < 0.5) pd.mesh.scale.multiplyScalar(Math.max(0, 1 - dt * 7));
         if (pd.fade <= 0) {
           pd.mesh.removeFromParent();
           this.puddles.splice(i, 1);

@@ -1,7 +1,7 @@
 {
   "name": "Eddie's Couch",
   "short_name": "Eddie's Couch",
-  "description": "A toddler. A man. Nine couches.",
+  "description": "Three people. One big house. Nine couches.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

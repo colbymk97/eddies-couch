@@ -287,6 +287,45 @@ export class Sound {
     this.tone(600, 0.08, { slideTo: 1200, gain: 0.15 });
   }
 
+  /** Zach's stomach filing a complaint. */
+  gurgle() {
+    this.tone(70, 0.9, { type: 'sawtooth', slideTo: 140, gain: 0.12, filter: 320, vibrato: 25, vibratoRate: 11, attack: 0.15 });
+    this.noise(0.8, { type: 'bandpass', freq: 260, freqTo: 520, q: 6, gain: 0.18, attack: 0.2 });
+    this.tone(160, 0.35, { type: 'sine', slideTo: 60, gain: 0.1, delay: 0.7 });
+  }
+
+  /** The toilet moment. A long, buzzy, deeply regrettable BRRRAP. */
+  brap() {
+    const n = 4;
+    for (let i = 0; i < n; i += 1) {
+      this.tone(95 - i * 8, 0.32, { type: 'sawtooth', gain: 0.22, filter: 520, vibrato: 30, vibratoRate: 38, delay: i * 0.26, attack: 0.02 });
+    }
+    this.noise(1.1, { type: 'lowpass', freq: 380, gain: 0.2, attack: 0.05 });
+  }
+
+  bidet() {
+    this.noise(1.6, { type: 'highpass', freq: 2600, gain: 0.16, attack: 0.15 });
+    this.noise(1.4, { type: 'bandpass', freq: 1400, freqTo: 2200, q: 2, gain: 0.08, delay: 0.1, attack: 0.2 });
+    this.tone(880, 0.12, { type: 'triangle', gain: 0.06 });
+  }
+
+  flush() {
+    this.noise(1.3, { type: 'bandpass', freq: 500, freqTo: 1800, q: 1.2, gain: 0.3, attack: 0.08 });
+    this.tone(300, 1.0, { slideTo: 90, type: 'sine', gain: 0.08, vibrato: 20, vibratoRate: 9 });
+  }
+
+  /** Sauce bottle squelch. */
+  squirt(power = 0.4) {
+    this.noise(0.18 + power * 0.25, { type: 'bandpass', freq: 900, freqTo: 300, q: 5, gain: 0.3 + power * 0.2 });
+    this.tone(260, 0.16, { slideTo: 120, type: 'triangle', gain: 0.12 });
+  }
+
+  /** Grunt of a man who does not skip leg day. */
+  flex() {
+    this.tone(140, 0.45, { type: 'sawtooth', slideTo: 95, gain: 0.2, filter: 700, vibrato: 12, vibratoRate: 20 });
+    this.noise(0.4, { type: 'bandpass', freq: 400, q: 3, gain: 0.12 });
+  }
+
   click() {
     this.tone(900, 0.05, { type: 'triangle', gain: 0.12 });
   }

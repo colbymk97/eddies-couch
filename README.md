@@ -1,27 +1,46 @@
 # Eddie's Couch
 
-**A toddler. A man. Nine couches.**
+**Three people. One big house. Nine couches.**
 
 Play it: https://colbymk97.github.io/eddies-couch/
 
-Theo (age 2) has eaten a whole bag of trash buns and has a dream: hurl on every seat of
-every couch in Eddie's house. Eddie (age 35, owns nine couches and 400 hotdog buns, zero
-hotdogs) is napping. He will not be napping for long.
+Eddie has a big house, nine couches and very strong feelings about all of them. His guests do not
+share those feelings. Pick a side:
+
+- **Theo** (age 4, rainbow glasses, weak stomach) hurls. He's small enough to hide under the dining
+  table and the bed.
+- **Zach** (short, very buff, never without a drumstick) flings saucy nuggets and leaves crumbs
+  everywhere. He can flex out of Eddie's grip once per life. He also eats a lot, and when his gut goes
+  critical he has to make it to a toilet. Every toilet in the house has a bidet.
+- **Eddie** (round gold glasses, gingham, spray bottle) has to keep the house clean until bedtime.
+
+Whoever you don't pick is played by the computer.
 
 ## How to play
 
-- Hurl on every seat of all 9 couches. Hold to charge a **MEGA HURL** that soaks several seats at once.
-- Eat hotdog buns (or dig through trash cans) to refill your tummy.
-- Eddie scrubs half-puked couches clean. Finish a couch and it's ruined forever.
+**Theo or Zach**
+
+- Mess up every seat of all 9 couches. Hold to charge a **MEGA** shot that soaks several seats at once.
+- Eat nuggets, drumsticks and mac & cheese to refill. Eddie's fridge has a whole rotisserie chicken.
+- Eddie scrubs half-messed couches clean. Finish a couch and it's ruined forever.
 - Missed shots leave puddles. Eddie slips on puddles.
-- Hide under the dining table or the bed, throw squeaky toys to lure Eddie away, drink juice for the zoomies,
-  and keep an eye on the microwave.
-- Get caught three times and it's nap time.
+- Throw squeaky toys to lure Eddie away, drink juice for the zoomies, and keep an eye on the microwave.
+- Get caught three times and it's time-out for good.
 
-**Keyboard + mouse:** WASD to waddle, mouse to look, click/Space to hurl (hold for mega), Shift to sprint,
-Q or right-click to throw a toy, wheel to zoom, M to mute, Esc to pause.
+**Eddie**
 
-**Touch:** left thumb to waddle, right thumb to look, HURL and TOY buttons. Play in landscape.
+- Survive until bedtime (2½ minutes) without losing 5 couches.
+- Grab Theo or Zach to send them to the time-out corner. Lunge to close the gap.
+- Hold the action button next to a stain to scrub it, or next to a puddle to mop it. A fully stained couch
+  takes 10 seconds to soak through, so scrub one seat to save it.
+- YELL freezes everyone nearby for a moment.
+
+**Keyboard + mouse:** WASD to move, mouse to look, click/Space for the main action (hold for mega or to scrub),
+Shift to sprint, Q or right-click to throw a toy (or yell), wheel to zoom, 1/2/3 to pick a character on the
+title screen, M to mute, Esc to pause.
+
+**Touch:** left thumb to move (you aim where you face), right thumb to look, big button for the main action,
+small button for toy/yell. Play in landscape; on iPhone, Add to Home Screen for full screen.
 
 ## Development
 

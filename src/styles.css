@@ -322,12 +322,12 @@ button {
   margin-top: 4px;
 }
 
-.diaper {
+.heart {
   width: 30px;
   height: 24px;
 }
 
-.diaper.is-lost {
+.heart.is-lost {
   opacity: 0.2;
   filter: grayscale(1);
 }
@@ -1479,7 +1479,7 @@ kbd {
     min-height: 14px;
   }
 
-  .diaper {
+  .heart {
     width: 22px;
     height: 18px;
   }
@@ -1840,7 +1840,7 @@ kbd {
   gap: 2px;
 }
 
-.is-compact .diaper {
+.is-compact .heart {
   width: 17px;
   height: 14px;
 }
@@ -2106,4 +2106,365 @@ kbd {
   border-width: 2px;
   box-shadow: 2px 2px 0 var(--ink);
   font-size: 11px;
+}
+
+/* ------------------------------------------------------------------ characters + roles */
+.catch-count {
+  min-width: 40px;
+  font-family: var(--display);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.meters {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gut-meter {
+  display: none;
+}
+
+.role-zach .gut-meter {
+  display: block;
+}
+
+.gut-fill {
+  background: linear-gradient(90deg, #f6c453, #e08a2a);
+}
+
+.gut-fill.is-danger {
+  background: linear-gradient(90deg, #c27a2c, #7a4a1f);
+  animation: pulse 0.7s ease-in-out infinite;
+}
+
+.role-eddie .tummy,
+.role-eddie .rage {
+  display: none;
+}
+
+.role-zach .tummy-fill,
+.role-zach .tummy-wave {
+  fill: #b8481f;
+}
+
+.role-zach .tummy-panel.is-burrito .tummy-fill,
+.role-zach .tummy-panel.is-burrito .tummy-wave {
+  fill: #e0913a;
+}
+
+.role-zach .puke-button {
+  background: radial-gradient(circle at 35% 30%, #ffc78a, #d9622b 60%, #8e2b14);
+}
+
+.role-eddie .puke-button {
+  background: radial-gradient(circle at 35% 30%, #c9f0ff, #4fb3e8 60%, #1f6f9f);
+}
+
+.role-eddie .toy-button {
+  background: var(--tomato);
+  color: #fff;
+}
+
+.puke-button.is-blocked {
+  filter: grayscale(0.8);
+  opacity: 0.6;
+}
+
+.couch-icon.is-sauce .fill,
+.couch-icon.is-ruined.is-sauce {
+  background: #c0532a;
+}
+
+.item-chip.emergency {
+  background: #7a4a1f;
+  color: #fff;
+  animation: pulse 0.7s ease-in-out infinite;
+}
+
+.item-chip.ally {
+  background: #e8f4fb;
+  font-size: 12px;
+}
+
+.bubble.zach {
+  background: #fff3e0;
+  font-size: 15px;
+  padding: 6px 11px;
+}
+
+.bubble.theo {
+  background: #e8f9ff;
+}
+
+.pop-text.brown {
+  color: #d9a066;
+}
+
+.banner.tone-brown .banner-title {
+  background: #7a4a1f;
+  color: #fff;
+}
+
+.edge-arrow[data-style='toilet'] {
+  border-bottom-color: #8fd3ff;
+}
+
+.edge-arrow[data-style='target'] {
+  border-bottom-color: var(--mustard);
+}
+
+/* Character select. */
+.pick {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  width: min(760px, 92vw);
+}
+
+.pick-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px 12px;
+  border: 4px solid var(--ink);
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 var(--ink);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.pick-theo {
+  background: linear-gradient(180deg, #d5f1ff, #a7dcf7);
+}
+
+.pick-zach {
+  background: linear-gradient(180deg, #ffe8c7, #ffc98a);
+}
+
+.pick-eddie {
+  background: linear-gradient(180deg, #ffe1d6, #ffb3a1);
+}
+
+.pick-card:hover {
+  transform: translateY(-3px) rotate(-0.6deg);
+}
+
+.pick-card.is-selected {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 0 0 4px var(--mustard), 7px 9px 0 var(--ink);
+}
+
+.pick-portrait {
+  width: 100%;
+  max-width: 170px;
+  aspect-ratio: 240 / 280;
+  max-height: 170px;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.pick-portrait.is-ready {
+  opacity: 1;
+}
+
+.pick-key {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--paper);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+}
+
+.is-touch .pick-key {
+  display: none;
+}
+
+.pick-name {
+  font-family: var(--display);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.pick-tag {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.pick-team {
+  margin-top: 4px;
+  padding: 1px 8px;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: var(--puke);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pick-team-eddie {
+  background: #8fd3ff;
+}
+
+.pick-blurb {
+  max-width: 640px;
+  margin: 0;
+  padding: 6px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.screen-title .logo-big {
+  font-size: clamp(64px, 12vw, 132px);
+}
+
+@media (max-width: 640px) {
+  .pick {
+    gap: 8px;
+  }
+
+  .pick-name {
+    font-size: 20px;
+  }
+
+  .pick-tag,
+  .pick-team {
+    display: none;
+  }
+}
+
+@media (max-height: 760px) {
+  .screen-title {
+    align-items: center;
+  }
+
+  .pick-portrait {
+    max-height: 120px;
+  }
+}
+
+/* Character select on a short landscape phone: compact horizontal cards. */
+.is-compact .pick {
+  width: min(640px, 94vw);
+  gap: 8px;
+}
+
+.is-compact .pick-card {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  padding: 4px 8px;
+  border-width: 3px;
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--ink);
+  text-align: left;
+}
+
+.is-compact .pick-card.is-selected {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 3px var(--mustard), 4px 5px 0 var(--ink);
+}
+
+.is-compact .pick-portrait {
+  grid-row: 1 / span 2;
+  width: 54px;
+  height: 63px;
+  max-height: none;
+}
+
+.is-compact .pick-name {
+  font-size: 18px;
+}
+
+.is-compact .pick-tag {
+  display: block;
+  font-size: 10px;
+}
+
+.is-compact .pick-team,
+.is-compact .pick-key,
+.is-compact .tagline {
+  display: none;
+}
+
+.is-compact .pick-blurb {
+  padding: 3px 10px;
+  border-width: 2px;
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 11px;
+}
+
+.is-compact .screen-title .logo-big {
+  font-size: 48px;
+}
+
+.is-compact .screen-title .logo-small {
+  font-size: 22px;
+}
+
+.is-compact .catch-count {
+  font-size: 18px;
+}
+
+.couch-icon.is-setting {
+  box-shadow: 0 0 0 3px var(--tomato);
+  animation: pulse 0.5s ease-in-out infinite;
+}
+
+/* Phones hide the tummy panel, so Zach's gut gets a mini gauge above the action button. */
+.gut-mini {
+  display: none;
+  position: absolute;
+  right: calc(16px + var(--safe-r));
+  bottom: calc(112px + var(--safe-b));
+  width: 96px;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--display);
+  font-size: 11px;
+  color: #fff;
+  -webkit-text-stroke: 1px var(--ink);
+}
+
+.gut-mini-track {
+  flex: 1;
+  height: 9px;
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: #e9e2d0;
+  overflow: hidden;
+}
+
+.gut-mini-track .gut-fill {
+  height: 100%;
+  width: 0;
+}
+
+.is-compact.role-zach .gut-mini {
+  display: flex;
+}
+
+.is-compact.role-zach .item-slot {
+  bottom: calc(136px + var(--safe-b));
 }

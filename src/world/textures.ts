@@ -165,7 +165,7 @@ export function grassTexture() {
 
 // ------------------------------------------------------------------ walls
 
-export type WallpaperKind = 'kitchen' | 'den' | 'hall' | 'living' | 'bedroom' | 'exterior';
+export type WallpaperKind = 'kitchen' | 'den' | 'hall' | 'living' | 'bedroom' | 'bath' | 'exterior';
 
 export function wallpaperTexture(kind: WallpaperKind) {
   return canvasTexture(
@@ -258,6 +258,31 @@ export function wallpaperTexture(kind: WallpaperKind) {
             drawStar(ctx, 0, 0, 5, 7, 3);
             ctx.restore();
           }
+          break;
+        }
+        case 'bath': {
+          // White subway tile up to a teal stripe, plain paint above.
+          ctx.fillStyle = '#eaf4f4';
+          ctx.fillRect(0, 0, w, h);
+          const tileTop = h * 0.42;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, tileTop, w, h - tileTop);
+          ctx.strokeStyle = '#c9d6d6';
+          ctx.lineWidth = 3;
+          for (let y = tileTop; y <= h; y += 32) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(w, y);
+            ctx.stroke();
+            for (let x = ((y - tileTop) / 32) % 2 ? 32 : 0; x <= w; x += 64) {
+              ctx.beginPath();
+              ctx.moveTo(x, y);
+              ctx.lineTo(x, y + 32);
+              ctx.stroke();
+            }
+          }
+          ctx.fillStyle = '#2a9d8f';
+          ctx.fillRect(0, tileTop - 14, w, 14);
           break;
         }
         case 'exterior': {
@@ -354,94 +379,6 @@ export function leatherTexture() {
     { repeat: [2, 2] },
   );
 }
-
-export function hawaiianTexture() {
-  return canvasTexture(
-    512,
-    512,
-    (ctx, w, h) => {
-      ctx.fillStyle = '#1d8fb3';
-      ctx.fillRect(0, 0, w, h);
-      for (let i = 0; i < 40; i += 1) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        ctx.fillStyle = '#2f9e57';
-        for (let k = 0; k < 3; k += 1) {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(Math.random() * TAU);
-          ctx.beginPath();
-          ctx.ellipse(28, 0, 30, 9, 0, 0, TAU);
-          ctx.fill();
-          ctx.restore();
-        }
-      }
-      const petals = ['#ff5a7a', '#ffcc33', '#ff8a3d', '#ffffff'];
-      for (let i = 0; i < 46; i += 1) {
-        const x = Math.random() * w;
-        const y = Math.random() * h;
-        const r = 12 + Math.random() * 14;
-        ctx.fillStyle = petals[i % petals.length];
-        for (let p = 0; p < 5; p += 1) {
-          const a = (p / 5) * TAU;
-          ctx.beginPath();
-          ctx.ellipse(x + Math.cos(a) * r * 0.7, y + Math.sin(a) * r * 0.7, r * 0.65, r * 0.42, a, 0, TAU);
-          ctx.fill();
-        }
-        ctx.fillStyle = '#ffe680';
-        ctx.beginPath();
-        ctx.arc(x, y, r * 0.25, 0, TAU);
-        ctx.fill();
-      }
-    },
-    { repeat: [1, 1] },
-  );
-}
-
-export function onesieTexture() {
-  return canvasTexture(
-    256,
-    256,
-    (ctx, w, h) => {
-      ctx.fillStyle = '#7cc4ef';
-      ctx.fillRect(0, 0, w, h);
-      for (let y = 10; y < h; y += 42) {
-        for (let x = (y / 42) % 2 === 0 ? 12 : 34; x < w; x += 46) {
-          ctx.fillStyle = '#ffd84a';
-          ctx.beginPath();
-          ctx.ellipse(x, y + 8, 9, 6, 0, 0, TAU);
-          ctx.fill();
-          ctx.beginPath();
-          ctx.arc(x + 7, y + 1, 5, 0, TAU);
-          ctx.fill();
-          ctx.fillStyle = '#ff9a2e';
-          ctx.fillRect(x + 11, y, 4, 2);
-        }
-      }
-    },
-    { repeat: [2, 1] },
-  );
-}
-
-export function bibTexture() {
-  return canvasTexture(256, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#ff6b8a';
-    ctx.lineWidth = 12;
-    ctx.strokeRect(6, 6, w - 12, h - 12);
-    ctx.fillStyle = '#d4384f';
-    ctx.textAlign = 'center';
-    ctx.font = `58px ${DISPLAY_FONT}`;
-    ctx.fillText("BABY'S", w / 2, 92);
-    ctx.fillText('FIRST', w / 2, 152);
-    ctx.fillStyle = '#5aa82e';
-    ctx.font = `70px ${DISPLAY_FONT}`;
-    ctx.fillText('HURL', w / 2, 222);
-  });
-}
-
-// ------------------------------------------------------------------ puke
 
 export function pukeSplatTexture(seed: number) {
   return canvasTexture(256, 256, (ctx, w, h) => {
@@ -889,5 +826,174 @@ export function nameplateTexture(name: string) {
     ctx.textBaseline = 'middle';
     ctx.font = `52px ${DISPLAY_FONT}`;
     ctx.fillText(name, w / 2, h / 2 + 4, w - 30);
+  });
+}
+
+// ------------------------------------------------------------------ bathrooms
+
+export function bathFloorTexture() {
+  return canvasTexture(
+    256,
+    256,
+    (ctx, w, h) => {
+      ctx.fillStyle = '#c9d6d6';
+      ctx.fillRect(0, 0, w, h);
+      const r = 14;
+      for (let row = 0; row < h / (r * 1.7) + 1; row += 1) {
+        for (let col = 0; col < w / (r * 2) + 1; col += 1) {
+          const x = col * r * 2 + (row % 2 ? r : 0);
+          const y = row * r * 1.72;
+          ctx.fillStyle = (row * 7 + col * 3) % 11 === 0 ? '#2a9d8f' : '#fbfdfd';
+          ctx.beginPath();
+          for (let k = 0; k < 6; k += 1) {
+            const a = (k / 6) * TAU + Math.PI / 6;
+            ctx.lineTo(x + Math.cos(a) * (r - 1.5), y + Math.sin(a) * (r - 1.5));
+          }
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+    },
+    { repeat: [1, 1] },
+  );
+}
+
+// ------------------------------------------------------------------ outfits
+
+/** Navy-and-white gingham, like Eddie's going-out shirt. */
+export function ginghamTexture() {
+  return canvasTexture(
+    256,
+    256,
+    (ctx, w, h) => {
+      ctx.fillStyle = '#f4f6fa';
+      ctx.fillRect(0, 0, w, h);
+      const s = 16;
+      ctx.fillStyle = 'rgba(28, 44, 92, 0.55)';
+      for (let x = 0; x < w; x += s * 2) ctx.fillRect(x, 0, s, h);
+      for (let y = 0; y < h; y += s * 2) ctx.fillRect(0, y, w, s);
+      speckle(ctx, w, h, 1500, 0.05, 1);
+    },
+    { repeat: [3, 3] },
+  );
+}
+
+/** Cream waffle-knit, like Zach's shirt. */
+export function waffleTexture() {
+  return canvasTexture(
+    256,
+    256,
+    (ctx, w, h) => {
+      ctx.fillStyle = '#ece5d3';
+      ctx.fillRect(0, 0, w, h);
+      const s = 16;
+      for (let y = 0; y < h; y += s) {
+        for (let x = 0; x < w; x += s) {
+          const g = ctx.createLinearGradient(x, y, x + s, y + s);
+          g.addColorStop(0, '#f7f2e4');
+          g.addColorStop(1, '#d6ccb4');
+          ctx.fillStyle = g;
+          ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+        }
+      }
+    },
+    { repeat: [4, 4] },
+  );
+}
+
+/** Kid's white tee with a little dinosaur on it. */
+export function kidTeeTexture() {
+  return canvasTexture(256, 256, (ctx, w, h) => {
+    // Transparent: this is a print that sits on the shirt.
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#4caf50';
+    ctx.save();
+    ctx.translate(w * 0.5, h * 0.55);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 34, 20, 0, 0, TAU);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(30, -22, 14, 11, 0, 0, TAU);
+    ctx.fill();
+    ctx.fillRect(18, -22, 12, 22);
+    ctx.beginPath();
+    ctx.moveTo(-30, -4);
+    ctx.lineTo(-62, 10);
+    ctx.lineTo(-28, 10);
+    ctx.fill();
+    for (const lx of [-16, 14]) ctx.fillRect(lx, 12, 9, 18);
+    ctx.fillStyle = '#ffeb3b';
+    for (let i = 0; i < 4; i += 1) {
+      ctx.beginPath();
+      ctx.moveTo(-18 + i * 12, -18);
+      ctx.lineTo(-12 + i * 12, -30);
+      ctx.lineTo(-6 + i * 12, -18);
+      ctx.fill();
+    }
+    ctx.fillStyle = '#1b1b1b';
+    ctx.beginPath();
+    ctx.arc(34, -25, 2.5, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// ------------------------------------------------------------------ sauce
+
+/** Ketchup + BBQ smears with crumbs, for Zach's messes. */
+export function sauceSplatTexture(seed: number) {
+  return canvasTexture(256, 256, (ctx, w, h) => {
+    const cx = w / 2;
+    const cy = h / 2;
+    const bbq = seed % 2 === 1;
+    const dark = bbq ? '#4a1f0e' : '#7d0f0a';
+    const mid = bbq ? '#7a3514' : '#c4160f';
+    const light = bbq ? '#a3521f' : '#ef3b2c';
+    // Swipe-y smears rather than round puddles.
+    for (let i = 0; i < 7; i += 1) {
+      const a = rand(0, TAU);
+      const len = rand(40, 95);
+      ctx.save();
+      ctx.translate(cx + rand(-30, 30), cy + rand(-30, 30));
+      ctx.rotate(a);
+      const g = ctx.createLinearGradient(-len, 0, len, 0);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(0.2, dark);
+      g.addColorStop(0.5, mid);
+      g.addColorStop(0.85, dark);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, len, rand(10, 22), 0, 0, TAU);
+      ctx.fill();
+      ctx.restore();
+    }
+    for (let i = 0; i < 12; i += 1) {
+      const a = rand(0, TAU);
+      const d = rand(20, 100);
+      ctx.fillStyle = i % 3 ? mid : dark;
+      ctx.beginPath();
+      ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, rand(4, 12), 0, TAU);
+      ctx.fill();
+    }
+    ctx.fillStyle = light;
+    for (let i = 0; i < 10; i += 1) {
+      ctx.beginPath();
+      ctx.ellipse(cx + rand(-60, 60), cy + rand(-60, 60), rand(3, 9), rand(1.5, 3), rand(0, TAU), 0, TAU);
+      ctx.fill();
+    }
+    // Breadcrumbs and nugget bits.
+    const crumbs = ['#e0a23f', '#c9862b', '#f2c46d', '#b8742a'];
+    for (let i = 0; i < 70; i += 1) {
+      const a = rand(0, TAU);
+      const d = Math.pow(Math.random(), 0.6) * 115;
+      ctx.fillStyle = crumbs[i % crumbs.length];
+      ctx.save();
+      ctx.translate(cx + Math.cos(a) * d, cy + Math.sin(a) * d);
+      ctx.rotate(rand(0, TAU));
+      const sz = rand(2, 6);
+      ctx.fillRect(-sz / 2, -sz / 2, sz, sz * rand(0.6, 1.4));
+      ctx.restore();
+    }
   });
 }

@@ -8,6 +8,8 @@ export interface CouchState {
   center: THREE.Vector3;
   vibrator?: THREE.Object3D;
   ruinedAt: number;
+  /** Eddie mode: seconds until a fully messed couch soaks through for good (0 = not setting). */
+  setting: number;
 }
 
 export interface Seat {
@@ -21,7 +23,9 @@ export interface Seat {
   top: THREE.Vector3;
   front: THREE.Vector3;
   facing: number;
-  puked: boolean;
+  /** Puked or sauced. */
+  messed: boolean;
+  mess: MessStyle | null;
   /** Eddie is napping on it. */
   occupied: boolean;
   decals: THREE.Mesh[];
@@ -34,6 +38,9 @@ export interface Puddle {
   mesh: THREE.Mesh;
   age: number;
   fade: number;
+  style: MessStyle;
 }
+
+export type MessStyle = 'puke' | 'sauce';
 
 export type Mood = 'angry' | 'calm' | 'sad' | 'sleepy' | 'shout';

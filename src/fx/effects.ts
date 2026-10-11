@@ -37,6 +37,7 @@ export class Effects {
   private readonly steamMat: THREE.SpriteMaterial;
   private readonly sparkleMat: THREE.SpriteMaterial;
   private readonly tearMat: THREE.SpriteMaterial;
+  private readonly gasMat: THREE.SpriteMaterial;
   private readonly flyMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
   private readonly flyGeo = new THREE.SphereGeometry(0.025, 6, 4);
   private readonly confettiGeo = new THREE.PlaneGeometry(0.08, 0.05);
@@ -52,6 +53,7 @@ export class Effects {
     this.steamMat = new THREE.SpriteMaterial({ map: glowTexture('255,255,255'), transparent: true, depthWrite: false, opacity: 0.8 });
     this.sparkleMat = new THREE.SpriteMaterial({ map: glowTexture('255,240,150'), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false });
     this.tearMat = new THREE.SpriteMaterial({ map: glowTexture('120,190,255'), transparent: true, depthWrite: false });
+    this.gasMat = new THREE.SpriteMaterial({ map: glowTexture('170,205,80'), transparent: true, depthWrite: false, opacity: 0.7 });
     for (let i = 0; i < 5; i += 1) {
       const s = new THREE.Sprite(this.starMat);
       s.scale.setScalar(0.18);
@@ -75,6 +77,11 @@ export class Effects {
 
   tear(at: THREE.Vector3, side: number) {
     this.emit(this.tearMat, at, new THREE.Vector3(side * rand(0.8, 1.4), rand(0.6, 1.2), rand(-0.3, 0.3)), 0.8, 0.09, 0, 6);
+  }
+
+  /** A worrying little green puff. */
+  gas(at: THREE.Vector3) {
+    this.emit(this.gasMat, at, new THREE.Vector3(rand(-0.3, 0.3), rand(0.2, 0.5), rand(-0.3, 0.3)), 1.1, 0.16, 1.2);
   }
 
   sparkle(at: THREE.Vector3, count = 10) {

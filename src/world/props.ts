@@ -423,24 +423,18 @@ export class PropBuilder {
     const lid = mesh(cylGeo(0.31, 0.31, 0.03, 24), shared.steel, 0, 0.92, -0.3, { rx: -1.25, parent: g });
     void lid;
     mesh(boxGeo(0.14, 0.03, 0.1), shared.black, 0, 0.03, 0.3, { parent: g });
-    // Two batches of buns: the bottom layer always stays, the top layer gets eaten.
-    const base = new THREE.Group();
-    const extra = new THREE.Group();
-    for (let i = 0; i < 9; i += 1) {
-      const bun = makeBun(1);
-      const a = (i / 9) * TAU;
-      bun.position.set(Math.cos(a) * 0.12, 0.68 + (i % 3) * 0.05, Math.sin(a) * 0.12);
-      bun.rotation.set(rand(-0.5, 0.5), a, rand(-0.4, 0.4));
-      bun.traverse((o) => (o.castShadow = false));
-      (i % 3 === 0 ? base : extra).add(bun);
+    // Crumpled paper towels. Lots of them. Eddie cleans a lot.
+    const trash = new THREE.Group();
+    const paper = std(0xf2efe8, { roughness: 0.95, flatShading: true });
+    for (let i = 0; i < 7; i += 1) {
+      const a = (i / 7) * TAU;
+      mesh(new THREE.IcosahedronGeometry(0.07, 0), paper, Math.cos(a) * 0.13, 0.66 + (i % 3) * 0.04, Math.sin(a) * 0.13, { rx: rand(0, TAU), ry: rand(0, TAU), parent: trash, cast: false });
     }
-    g.add(base, extra);
-    mergeStatic(base);
-    mergeStatic(extra);
-    keepSeparate(extra);
+    g.add(trash);
+    mergeStatic(trash);
     g.add(blobShadow(this.shadow, 0.9, 0.9, 0.45));
     this.collision.addBox(x, z, 0.62, 0.62);
-    return { group: g, extra };
+    return { group: g };
   }
 
   // ---------------------------------------------------------------- den
@@ -590,52 +584,6 @@ export class PropBuilder {
     g.add(blobShadow(this.shadow, 1.3, 1.3, 0.35));
   }
 
-  playpen(x: number, z: number) {
-    const g = this.group(x, z);
-    const s = 1.5;
-    const net = canvasTexture(
-      128,
-      128,
-      (ctx, w, h) => {
-        ctx.clearRect(0, 0, w, h);
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = 3;
-        for (let i = 0; i <= w; i += 16) {
-          ctx.beginPath();
-          ctx.moveTo(i, 0);
-          ctx.lineTo(i, h);
-          ctx.moveTo(0, i);
-          ctx.lineTo(w, i);
-          ctx.stroke();
-        }
-      },
-      { repeat: [4, 2] },
-    );
-    const netMat = new THREE.MeshStandardMaterial({ map: net, transparent: true, side: THREE.DoubleSide, roughness: 0.9, alphaTest: 0.3 });
-    const rail = std(0x5dade2, { roughness: 0.5 });
-    for (const [px, pz] of [
-      [-1, -1],
-      [1, -1],
-      [1, 1],
-      [-1, 1],
-    ]) {
-      mesh(cylGeo(0.04, 0.04, 0.7, 10), rail, (px * s) / 2, 0.35, (pz * s) / 2, { parent: g });
-    }
-    for (let i = 0; i < 4; i += 1) {
-      const a = (i * Math.PI) / 2;
-      const side = new THREE.Group();
-      side.rotation.y = a;
-      g.add(side);
-      // Front side left open: Theo escaped long ago.
-      if (i === 0) continue;
-      mesh(cylGeo(0.03, 0.03, s, 8), rail, 0, 0.7, s / 2, { rz: Math.PI / 2, parent: side });
-      mesh(new THREE.PlaneGeometry(s, 0.62), netMat, 0, 0.36, s / 2, { parent: side, cast: false });
-    }
-    mesh(boxGeo(s, 0.05, s), std(0xaed6f1, { roughness: 0.9 }), 0, 0.025, 0, { parent: g, cast: false });
-    const blocks = [0xe74c3c, 0xf1c40f, 0x2ecc71];
-    blocks.forEach((c, i) => mesh(roundedBoxGeo(0.14, 0.14, 0.14, 0.02), std(c), -0.4 + i * 0.18, 0.12, -0.45 + (i % 2) * 0.15, { ry: i, parent: g }));
-  }
-
   portrait(dog: DogStyle, x: number, z: number, rot: number) {
     const g = this.group(x, z, rot);
     this.wallDecor.push(g);
@@ -703,6 +651,101 @@ export class PropBuilder {
     this.wallDecor.push(g);
     mesh(roundedBoxGeo(0.62, 0.5, 0.03, 0.01), shared.midWood, 0, y, 0, { parent: g });
     mesh(new THREE.PlaneGeometry(0.54, 0.42), std(0xffffff, { map: tex, roughness: 0.95 }), 0, y, 0.017, { parent: g, cast: false });
+  }
+
+  // ---------------------------------------------------------------- bathrooms
+
+  /** A toilet with a bidet seat (they all have one). Returns where to sit and where to stand. */
+  toilet(x: number, z: number, rot: number) {
+    const g = this.group(x, z, rot);
+    const porcelain = glossy(0xfbfbf8, { roughness: 0.12, clearcoat: 1 });
+    mesh(roundedBoxGeo(0.46, 0.42, 0.2, 0.05), porcelain, 0, 0.66, -0.27, { parent: g });
+    mesh(roundedBoxGeo(0.5, 0.05, 0.24, 0.02), porcelain, 0, 0.9, -0.27, { parent: g });
+    mesh(boxGeo(0.07, 0.02, 0.03), shared.chrome, -0.17, 0.82, -0.16, { parent: g, cast: false });
+    const base = mesh(cylGeo(0.15, 0.13, 0.34, 20), porcelain, 0, 0.17, -0.04, { parent: g });
+    base.scale.z = 1.3;
+    const bowl = mesh(cylGeo(0.21, 0.16, 0.14, 24), porcelain, 0, 0.38, 0.03, { parent: g });
+    bowl.scale.z = 1.25;
+    const water = mesh(new THREE.CircleGeometry(0.15, 20), std(0x6fb7d8, { roughness: 0.05 }), 0, 0.44, 0.03, { rx: -Math.PI / 2, parent: g, cast: false });
+    water.scale.y = 1.25;
+    const seat = mesh(new THREE.TorusGeometry(0.17, 0.035, 8, 24), porcelain, 0, 0.465, 0.03, { rx: Math.PI / 2, parent: g });
+    seat.scale.y = 1.25;
+    mesh(roundedBoxGeo(0.4, 0.04, 0.46, 0.02), porcelain, 0, 0.68, -0.13, { rx: -1.38, parent: g });
+    // Bidet control arm with very serious buttons.
+    const panel = std(0xdfe3e6, { roughness: 0.35 });
+    mesh(roundedBoxGeo(0.09, 0.07, 0.3, 0.02), panel, 0.27, 0.47, 0.0, { parent: g });
+    const buttons = [0x3498db, 0xff6b9a, 0x2ecc71, 0xf1c40f];
+    buttons.forEach((c, i) => mesh(cylGeo(0.013, 0.013, 0.012, 10), std(c, { emissive: c, emissiveIntensity: 0.4 }), 0.27, 0.51, -0.09 + i * 0.06, { parent: g, cast: false }));
+    const label = textLabelTexture(['BIDET'], { width: 128, height: 40, bg: '#dfe3e6', fg: '#2c3e50', size: 28 });
+    mesh(new THREE.PlaneGeometry(0.08, 0.025), std(0xffffff, { map: label }), 0.27, 0.506, 0.12, { rx: -Math.PI / 2, rz: Math.PI / 2, parent: g, cast: false });
+    // Toilet paper, naturally.
+    mesh(cylGeo(0.012, 0.012, 0.16, 6), shared.chrome, -0.38, 0.62, -0.2, { rz: Math.PI / 2, parent: g, cast: false });
+    mesh(cylGeo(0.06, 0.06, 0.11, 16), std(0xffffff, { roughness: 0.95 }), -0.38, 0.62, -0.2, { rz: Math.PI / 2, parent: g });
+    g.add(blobShadow(this.shadow, 0.8, 1.0, 0.4));
+    this.collision.addBox(x, z, 0.58, 0.8, { rot });
+    g.updateMatrixWorld(true);
+    const forward = new THREE.Vector3(Math.sin(rot), 0, Math.cos(rot));
+    return {
+      seat: g.localToWorld(new THREE.Vector3(0, 0, 0.05)),
+      nozzle: g.localToWorld(new THREE.Vector3(0, 0.42, 0.05)),
+      front: new THREE.Vector3(x, 0, z).addScaledVector(forward, 0.95),
+      facing: rot,
+    };
+  }
+
+  vanity(x: number, z: number, rot: number) {
+    const g = this.group(x, z, rot);
+    mesh(roundedBoxGeo(0.72, 0.8, 0.46, 0.03), std(0x2a9d8f, { roughness: 0.5 }), 0, 0.4, 0, { parent: g });
+    mesh(roundedBoxGeo(0.78, 0.05, 0.5, 0.015), glossy(0xf5f5f2, { roughness: 0.15 }), 0, 0.82, 0, { parent: g });
+    const basin = mesh(sphereGeo(0.17, 20, 10), glossy(0xffffff, { roughness: 0.1 }), 0, 0.83, 0.03, { parent: g, cast: false });
+    basin.scale.set(1.2, 0.25, 0.9);
+    const faucet = new THREE.TubeGeometry(
+      new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0, -0.18), new THREE.Vector3(0, 0.2, -0.18), new THREE.Vector3(0, 0.22, -0.08)]),
+      10,
+      0.014,
+      8,
+    );
+    mesh(faucet, shared.chrome, 0, 0.84, 0, { parent: g });
+    mesh(cylGeo(0.035, 0.04, 0.14, 12), glossy(0xff8fb1, { roughness: 0.2 }), 0.26, 0.92, -0.1, { parent: g });
+    mesh(roundedBoxGeo(0.62, 0.78, 0.03, 0.01), shared.chrome, 0, 1.6, -0.215, { parent: g, cast: false });
+    mesh(new THREE.PlaneGeometry(0.56, 0.72), new THREE.MeshStandardMaterial({ color: 0xc8dce6, metalness: 1, roughness: 0.05 }), 0, 1.6, -0.198, { parent: g, cast: false });
+    g.add(blobShadow(this.shadow, 0.9, 0.7, 0.35));
+    this.collision.addBox(x, z, 0.76, 0.48, { rot });
+  }
+
+  towelRack(x: number, y: number, z: number, rot: number, color: number) {
+    const g = this.group(x, z, rot);
+    this.wallDecor.push(g);
+    mesh(cylGeo(0.012, 0.012, 0.6, 8), shared.chrome, 0, y, 0.05, { rz: Math.PI / 2, parent: g, cast: false });
+    mesh(roundedBoxGeo(0.46, 0.5, 0.04, 0.015), std(color, { roughness: 0.95 }), 0, y - 0.22, 0.06, { parent: g });
+  }
+
+  /** A framed multi-line note on a wall. */
+  framedNote(x: number, y: number, z: number, rot: number, lines: string[], w: number, h: number, bg: string, fg: string, size = 40) {
+    const tex = textLabelTexture(lines, { width: 512, height: Math.round((512 * h) / w), bg, fg, size, border: fg });
+    const g = this.group(x, z, rot);
+    this.wallDecor.push(g);
+    mesh(roundedBoxGeo(w + 0.06, h + 0.06, 0.03, 0.012), shared.darkWood, 0, y, 0, { parent: g });
+    mesh(new THREE.PlaneGeometry(w, h), std(0xffffff, { map: tex, roughness: 0.8 }), 0, y, 0.017, { parent: g, cast: false });
+  }
+
+  /** Where mess-makers get sent. Includes an adult-sized chair for Zach. */
+  timeoutCorner(x: number, z: number) {
+    const g = this.group(x, z);
+    const wood = std(0xe8d5b0, { roughness: 0.6 });
+    const chair = (cx: number, scale: number, color: number) => {
+      const c = new THREE.Group();
+      c.position.set(cx, 0, 0);
+      c.rotation.y = Math.PI;
+      c.scale.setScalar(scale);
+      g.add(c);
+      mesh(roundedBoxGeo(0.4, 0.05, 0.38, 0.015), std(color, { roughness: 0.5 }), 0, 0.42, 0, { parent: c });
+      mesh(roundedBoxGeo(0.4, 0.42, 0.04, 0.015), std(color, { roughness: 0.5 }), 0, 0.66, 0.17, { parent: c });
+      for (const lx of [-0.16, 0.16]) for (const lz of [-0.15, 0.15]) mesh(cylGeo(0.02, 0.018, 0.42, 8), wood, lx, 0.21, lz, { parent: c });
+    };
+    chair(-0.6, 0.62, 0x5dade2);
+    chair(0.6, 1, 0x7f8c8d);
+    g.add(blobShadow(this.shadow, 2.2, 0.9, 0.3));
   }
 
   register(x: number, z: number, w: number, d: number, sight = false) {

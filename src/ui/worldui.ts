@@ -15,9 +15,12 @@ interface Pop {
 
 const tmp = new THREE.Vector3();
 
+export type Speaker = 'eddie' | 'theo' | 'zach';
+export type ArrowStyle = 'danger' | 'toilet' | 'target';
+
 /** DOM elements pinned to 3D positions: speech bubbles, score pops, Eddie's "?!" meter. */
 export class WorldUi {
-  private readonly bubbles: Record<'eddie' | 'theo', Bubble>;
+  private readonly bubbles: Record<Speaker, Bubble>;
   private readonly pops: Pop[] = [];
   private readonly mark: HTMLDivElement;
   private readonly markAnchor: HTMLDivElement;
@@ -29,7 +32,7 @@ export class WorldUi {
     private readonly layer: HTMLElement,
     private readonly camera: THREE.PerspectiveCamera,
   ) {
-    this.bubbles = { eddie: this.makeBubble(), theo: this.makeBubble() };
+    this.bubbles = { eddie: this.makeBubble(), theo: this.makeBubble(), zach: this.makeBubble() };
     this.markAnchor = document.createElement('div');
     this.markAnchor.className = 'anchor';
     this.mark = document.createElement('div');
@@ -66,21 +69,21 @@ export class WorldUi {
     };
   }
 
-  say(who: 'eddie' | 'theo', text: string, mood: Mood, duration: number) {
+  say(who: Speaker, text: string, mood: Mood, duration: number) {
     const b = this.bubbles[who];
     b.bubble.textContent = text;
-    b.bubble.className = `bubble mood-${mood}${who === 'theo' ? ' theo' : ''}`;
+    b.bubble.className = `bubble mood-${mood}${who === 'eddie' ? '' : ` ${who}`}`;
     // Restart the entry animation.
     void b.bubble.offsetWidth;
     b.time = duration;
     b.anchor.style.display = '';
   }
 
-  isTalking(who: 'eddie' | 'theo') {
+  isTalking(who: Speaker) {
     return this.bubbles[who].time > 0;
   }
 
-  pop(position: THREE.Vector3, text: string, style: '' | 'small' | 'gold' | 'red' | 'blue' = '') {
+  pop(position: THREE.Vector3, text: string, style: '' | 'small' | 'gold' | 'red' | 'blue' | 'brown' = '') {
     const anchor = document.createElement('div');
     anchor.className = 'anchor';
     const label = document.createElement('div');
@@ -104,14 +107,14 @@ export class WorldUi {
 
   update(
     dt: number,
-    eddieHead: THREE.Vector3,
-    theoHead: THREE.Vector3,
+    heads: Record<Speaker, THREE.Vector3>,
     suspicion: number,
     alerted: boolean,
     showMark: boolean,
-    chasing: boolean,
+    arrow: { at: THREE.Vector3; style: ArrowStyle } | null,
   ) {
-    for (const [who, b] of Object.entries(this.bubbles) as ['eddie' | 'theo', Bubble][]) {
+    const eddieHead = heads.eddie;
+    for (const [who, b] of Object.entries(this.bubbles) as [Speaker, Bubble][]) {
       if (b.time <= 0) continue;
       b.time -= dt;
       if (b.time <= 0.2 && !b.bubble.classList.contains('is-leaving')) b.bubble.classList.add('is-leaving');
@@ -119,8 +122,7 @@ export class WorldUi {
         b.anchor.style.display = 'none';
         continue;
       }
-      const head = who === 'eddie' ? eddieHead : theoHead;
-      const p = this.project(head);
+      const p = this.project(heads[who]);
       // Keep bubbles on screen without sliding them under the HUD panels.
       const compact = document.body.classList.contains('is-compact');
       const margin = compact ? 80 : 110;
@@ -156,10 +158,11 @@ export class WorldUi {
       this.markAnchor.style.display = 'none';
     }
 
-    // Off-screen arrow toward a chasing Eddie.
-    const p = this.project(eddieHead);
+    // Off-screen arrow toward a chasing Eddie, the nearest bidet, or the nearest mess-maker.
+    const p = arrow ? this.project(arrow.at) : { x: 0, y: 0, behind: false };
     const offscreen = p.behind || p.x < 0 || p.x > this.width || p.y < 0 || p.y > this.height;
-    if (chasing && offscreen) {
+    if (arrow && (offscreen || arrow.style === 'toilet')) {
+      this.arrow.dataset.style = arrow.style;
       let dx = p.x - this.width / 2;
       let dy = p.y - this.height / 2;
       if (p.behind) {

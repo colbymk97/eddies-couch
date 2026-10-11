@@ -6,10 +6,10 @@
     <meta name="theme-color" content="#241730" />
     <meta
       name="description"
-      content="A toddler. A man. Nine couches. Help Theo hurl on every couch in Eddie's house before Eddie catches him."
+      content="Nine couches. Three people. Play as Theo (puke), Zach (sauce) or Eddie (spray bottle) in a stealth-chase game about the worst houseguests ever."
     />
     <meta property="og:title" content="Eddie's Couch" />
-    <meta property="og:description" content="A toddler. A man. Nine couches. A stealth-chase game about the worst houseguest ever." />
+    <meta property="og:description" content="A four-year-old, a very buff man with a drumstick, and Eddie. Nine couches. A stealth-chase game about the worst houseguests ever." />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
@@ -31,8 +31,8 @@
       <div id="hud" class="hud is-hidden">
         <div class="hud-tl">
           <div class="panel couches-panel">
-            <div class="panel-label">Couches ruined</div>
-            <div class="couch-count"><span id="couch-count">0</span><small>/9</small></div>
+            <div id="couch-label" class="panel-label">Couches ruined</div>
+            <div class="couch-count"><span id="couch-count">0</span><small id="couch-max">/9</small></div>
             <div id="couch-icons" class="couch-icons"></div>
           </div>
         </div>
@@ -51,7 +51,7 @@
               </svg>
             </div>
             <div class="eddie-text">
-              <div class="panel-label">Eddie is</div>
+              <div id="eddie-label" class="panel-label">Eddie is</div>
               <div id="eddie-state" class="eddie-state">Napping</div>
             </div>
             <div id="rage" class="rage" title="Eddie's rage"></div>
@@ -70,7 +70,7 @@
             <div id="combo" class="combo"></div>
           </div>
           <div class="panel lives-panel">
-            <div class="panel-label">Diapers</div>
+            <div id="lives-label" class="panel-label">Hearts</div>
             <div id="lives" class="lives"></div>
           </div>
         </div>
@@ -92,18 +92,25 @@
                 <path class="tummy-outline" d="M50 8c22 0 40 16 40 40 0 26-18 44-42 44C26 92 10 76 10 54c0-14 8-22 16-28 6-5 8-18 24-18z" />
               </svg>
               <div class="tummy-label">
-                <div class="panel-label">Tummy</div>
+                <div id="tummy-label" class="panel-label">Tummy</div>
                 <div id="tummy-text" class="tummy-text">100%</div>
               </div>
             </div>
-            <div class="meter">
-              <div class="panel-label">Zoomies</div>
-              <div class="meter-track"><div id="stamina-fill" class="meter-fill"></div></div>
+            <div class="meters">
+              <div class="meter">
+                <div id="stamina-label" class="panel-label">Zoomies</div>
+                <div class="meter-track"><div id="stamina-fill" class="meter-fill"></div></div>
+              </div>
+              <div class="meter gut-meter">
+                <div class="panel-label">Gut</div>
+                <div class="meter-track"><div id="gut-fill" class="meter-fill gut-fill"></div></div>
+              </div>
             </div>
           </div>
         </div>
 
         <div id="item-slot" class="item-slot"></div>
+        <div class="gut-mini" aria-hidden="true"><span>Gut</span><div class="gut-mini-track"><div id="gut-mini-fill" class="gut-fill"></div></div></div>
 
         <div id="hint" class="hint"></div>
         <div id="hide-indicator" class="hide-indicator">Hidden</div>
@@ -123,7 +130,7 @@
             <circle class="hurl-ring-track" cx="50" cy="50" r="46" />
             <circle id="hurl-ring-fill" class="hurl-ring-fill" cx="50" cy="50" r="46" />
           </svg>
-          <span class="hurl-label">Hurl</span>
+          <span id="hurl-label" class="hurl-label">Hurl</span>
           <small id="hurl-tummy" class="hurl-tummy">100%</small>
           <span class="hurl-stamina"><span id="hurl-stamina-fill"></span></span>
         </button>
@@ -135,18 +142,31 @@
             <span class="logo-small">Eddie's</span>
             <span class="logo-big">Couch</span>
           </div>
-          <p class="tagline">A toddler. A man. <b>Nine couches.</b></p>
-          <div class="cast">
-            <div class="cast-card cast-theo">
-              <div class="cast-name">Theo</div>
-              <div class="cast-role">Age 2. Ate a whole bag of trash buns. Has a dream.</div>
-            </div>
-            <div class="cast-vs">VS</div>
-            <div class="cast-card cast-eddie">
-              <div class="cast-name">Eddie</div>
-              <div class="cast-role">Age 35. Owns 9 couches and 400 hotdog buns. Zero hotdogs. Don't ask about the dog.</div>
-            </div>
+          <p class="tagline">Three people. One big house. <b>Nine couches.</b></p>
+          <div class="pick" role="group" aria-label="Choose your character">
+            <button class="pick-card pick-theo" data-role="theo" type="button" aria-pressed="false">
+              <img class="pick-portrait" alt="" />
+              <span class="pick-key">1</span>
+              <span class="pick-name">Theo</span>
+              <span class="pick-tag">Age 4. Rainbow glasses. Weak stomach.</span>
+              <span class="pick-team">Mess squad</span>
+            </button>
+            <button class="pick-card pick-zach" data-role="zach" type="button" aria-pressed="false">
+              <img class="pick-portrait" alt="" />
+              <span class="pick-key">2</span>
+              <span class="pick-name">Zach</span>
+              <span class="pick-tag">Short. Swole. Never without a drumstick.</span>
+              <span class="pick-team">Mess squad</span>
+            </button>
+            <button class="pick-card pick-eddie" data-role="eddie" type="button" aria-pressed="false">
+              <img class="pick-portrait" alt="" />
+              <span class="pick-key">3</span>
+              <span class="pick-name">Eddie</span>
+              <span class="pick-tag">Big house. Nine couches. One spray bottle.</span>
+              <span class="pick-team pick-team-eddie">Clean team</span>
+            </button>
           </div>
+          <p id="pick-blurb" class="pick-blurb"></p>
           <div class="menu">
             <button id="play-button" class="btn btn-play" type="button">Play</button>
             <button id="help-button" class="btn btn-secondary" type="button">How to play</button>
@@ -164,37 +184,42 @@
 
       <div id="screen-help" class="screen screen-help is-hidden">
         <div class="card help-card">
-          <h2>How to ruin Eddie's life</h2>
+          <h2>How to play</h2>
           <div class="help-grid">
             <div>
-              <h3>The plan</h3>
+              <h3>Theo &amp; Zach: the mess squad</h3>
               <ul class="rules">
-                <li><b>Hurl on every seat</b> of all 9 couches.</li>
-                <li><b>Eat hotdog buns</b> (and dig through trash cans) to refill your tummy.</li>
-                <li><b>Hold to charge a MEGA HURL.</b> It flies farther and soaks several seats.</li>
-                <li><b>Eddie cleans</b> half-puked couches. Finish them and they are ruined forever.</li>
-                <li><b>Missed shots make puddles.</b> Eddie slips on them. Hilariously.</li>
-                <li><b>Hide</b> under the dining table or the bed. Eddie can't fit.</li>
-                <li><b>Squeaky toys</b> lure Eddie away. <b>Juice</b> gives you the zoomies. The microwave makes a <b>Mystery Burrito</b>.</li>
-                <li>Get caught 3 times and it's <b>nap time</b>.</li>
+                <li><b>Mess up every seat</b> of all 9 couches. Theo hurls. Zach flings saucy nuggets.</li>
+                <li><b>Hold to charge a MEGA shot.</b> It flies farther and soaks several seats.</li>
+                <li><b>Eat</b> nuggets, drumsticks and mac &amp; cheese to refill. Eddie's fridge has a whole chicken.</li>
+                <li><b>Eddie scrubs</b> half-messed couches. Finish a couch and it's ruined forever.</li>
+                <li><b>Missed shots make puddles.</b> Eddie slips on them.</li>
+                <li><b>Theo</b> can hide under the dining table or the bed. <b>Zach</b> can flex out of one grab per life.</li>
+                <li><b>Zach's gut</b> fills up as he eats. When it goes critical, get to a toilet. Every toilet has a bidet.</li>
+                <li>Get caught 3 times and it's <b>time-out</b> for good.</li>
               </ul>
             </div>
             <div>
+              <h3>Eddie: the clean team</h3>
+              <ul class="rules">
+                <li><b>Keep the house clean until bedtime</b> (2½ minutes). Lose 5 couches and it's over. A fully stained couch takes 10 seconds to soak through: scrub one seat to save it.</li>
+                <li><b>Grab</b> Theo or Zach to send them to time-out. Lunge to close the gap.</li>
+                <li><b>Hold GRAB next to a stain</b> to scrub it, or next to a puddle to mop it.</li>
+                <li><b>YELL</b> freezes everyone nearby for a moment.</li>
+              </ul>
               <h3 class="desktop-only">Keyboard + mouse</h3>
               <ul class="keys desktop-only">
-                <li><kbd>W A S D</kbd> waddle</li>
-                <li><kbd>Mouse</kbd> look</li>
-                <li><kbd>Click</kbd> / <kbd>Space</kbd> hurl, hold for <b>mega</b></li>
-                <li><kbd>Shift</kbd> zoomies (sprint)</li>
-                <li><kbd>Q</kbd> / <kbd>Right-click</kbd> throw toy</li>
-                <li><kbd>Wheel</kbd> zoom · <kbd>M</kbd> mute · <kbd>Esc</kbd> pause</li>
+                <li><kbd>W A S D</kbd> move · <kbd>Mouse</kbd> look · <kbd>Shift</kbd> sprint</li>
+                <li><kbd>Click</kbd> / <kbd>Space</kbd> hurl / fling / grab (hold for mega or scrub)</li>
+                <li><kbd>Q</kbd> / <kbd>Right-click</kbd> throw toy · yell</li>
+                <li><kbd>1 2 3</kbd> pick a character · <kbd>M</kbd> mute · <kbd>Esc</kbd> pause</li>
               </ul>
               <h3 class="touch-only">Touch</h3>
               <ul class="keys touch-only">
-                <li><b>Left thumb</b>: drag anywhere to waddle (push all the way to sprint)</li>
+                <li><b>Left thumb</b>: drag to move (push all the way to sprint). You aim where you face.</li>
                 <li><b>Right thumb</b>: drag to look</li>
-                <li><b>HURL</b>: tap, or hold for mega</li>
-                <li><b>TOY</b>: throw a squeaky toy</li>
+                <li><b>Big button</b>: tap to hurl / fling / grab, hold for mega or scrub</li>
+                <li><b>Small button</b>: throw toy · yell</li>
               </ul>
             </div>
           </div>
@@ -244,7 +269,7 @@
 
       <div id="rotate" class="rotate-prompt">
         <div class="rotate-icon">↻</div>
-        <div>Turn your phone sideways.<br /><small>Theo needs room to hurl.</small></div>
+        <div>Turn your phone sideways.<br /><small>This house needs room.</small></div>
       </div>
       <div id="fade" class="fade"></div>
       <div id="loading" class="loading"><div class="loading-text">Fluffing cushions…</div></div>

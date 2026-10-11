@@ -9,6 +9,7 @@ import {
   MICROWAVE,
   PORTRAITS,
   ROOMS,
+  TOILETS,
   TRASH_CANS,
   WALLS,
   WINDOWS,
@@ -20,6 +21,7 @@ import {
 } from './layout';
 import { PropBuilder, type TvChannel } from './props';
 import {
+  bathFloorTexture,
   blobShadowTexture,
   canvasTexture,
   carpetTexture,
@@ -55,6 +57,7 @@ export interface House {
   tv: TvChannel;
   microwave: ReturnType<PropBuilder['microwave']>;
   trashCans: ReturnType<PropBuilder['trashCan']>[];
+  toilets: ReturnType<PropBuilder['toilet']>[];
   update(dt: number, time: number): void;
 }
 
@@ -83,8 +86,9 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
     tile: std(0xffffff, { map: tileFloorTexture(), roughness: 0.28 }),
     carpetDen: std(0xffffff, { map: carpetTexture('#7a5c46', '#b08a6a'), roughness: 1 }),
     carpetBed: std(0xffffff, { map: carpetTexture('#5d6f8f', '#8ea0c0'), roughness: 1 }),
+    bathTile: std(0xffffff, { map: bathFloorTexture(), roughness: 0.3 }),
   };
-  const floorTile: Record<FloorKind, number> = { wood: 2.6, tile: 2.4, carpetDen: 2, carpetBed: 2 };
+  const floorTile: Record<FloorKind, number> = { wood: 2.6, tile: 2.4, carpetDen: 2, carpetBed: 2, bathTile: 1.2 };
   for (const room of ROOMS) {
     const w = room.maxX - room.minX;
     const d = room.maxZ - room.minZ;
@@ -92,7 +96,9 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
     const map = (floorMaterials[room.floor] as THREE.MeshStandardMaterial).map;
     if (map) map.repeat.set(1, 1);
     scaleUVs(geo, w / floorTile[room.floor], d / floorTile[room.floor]);
-    mesh(geo, floorMaterials[room.floor], (room.minX + room.maxX) / 2, 0.002, (room.minZ + room.maxZ) / 2, {
+    // Bathrooms sit on top of the room they were carved from.
+    const y = room.floor === 'bathTile' ? 0.005 : 0.002;
+    mesh(geo, floorMaterials[room.floor], (room.minX + room.maxX) / 2, y, (room.minZ + room.maxZ) / 2, {
       rx: -Math.PI / 2,
       parent: root,
       cast: false,
@@ -111,7 +117,7 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
     return tex;
   };
   const occluders: Occluder[] = [];
-  const exteriorGroups = new Map<string, THREE.Group>();
+  const exteriorPieces: { side: string; a: number; b: number; group: THREE.Group }[] = [];
   const skyTex = windowSkyTexture();
 
   for (const wall of WALLS) {
@@ -119,7 +125,7 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
     for (const [a, b] of pieces) {
       const group = buildWallPiece(wall, a, b, wallpaper);
       root.add(group);
-      if (wall.exterior) exteriorGroups.set(exteriorSide(wall), group);
+      if (wall.exterior) exteriorPieces.push({ side: exteriorSide(wall), a, b, group });
       registerOccluder(occluders, group);
       const mid = (a + b) / 2;
       const len = b - a;
@@ -134,10 +140,13 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
   }
 
   for (const win of WINDOWS) {
-    const parent = exteriorGroups.get(win.side);
-    if (!parent) continue;
+    const piece = exteriorPieces.find((p) => p.side === win.side && win.center > p.a && win.center < p.b);
+    if (!piece) continue;
     const w = buildWindow(win, skyTex);
-    parent.add(w);
+    // Wall pieces are centred on their own midpoint; along-Z walls map local X to world -Z.
+    const offset = win.center - (piece.a + piece.b) / 2;
+    w.position.x = win.side === 'west' || win.side === 'east' ? -offset : offset;
+    piece.group.add(w);
   }
   // Windows were added after the occluders captured materials; refresh them.
   for (const occ of occluders) collectMaterials(occ);
@@ -176,7 +185,7 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
   props.diningTable(-8.2, -4.2);
   props.pantry(-12.6, -6.3, -3.0, -12.88);
   // Den.
-  props.bookshelf(-5.0, 0.84, 0);
+  props.bookshelf(-11.3, 0.84, 0);
   props.crtTv(-8.7, 4.6, -Math.PI / 2);
   props.rug(-10.2, 4.6, 3.4, 3.0, ['#3d5a40', '#d9b26f', '#8c2f39']);
   props.floorLamp(-12.3, 8.2);
@@ -185,7 +194,9 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
   // Hall.
   props.rug(-0.5, 0, 1.5, 13.5, ['#8c2f39', '#e9c46a', '#2a3b5b']);
   props.sideTable(1.6, 1.3);
-  props.playpen(-0.5, 7.3);
+  props.timeoutCorner(-0.5, 8.3);
+  props.wallSign(-0.5, 1.75, 8.86, Math.PI, ['TIME-OUT CORNER'], '#fff3e0', '#c0392b', 1.5, 0.3);
+  props.framedNote(1.86, 1.55, -4.6, -Math.PI / 2, ['HOUSE RULES', '1. SHOES OFF', '2. COASTERS', '3. NO SAUCE', '4. NO PUKE', '5. USE THE BIDET'], 0.7, 0.95, '#fffaf0', '#2c3e50', 54);
   for (const p of PORTRAITS) {
     if (p.wall === 'hallWest') props.portrait(p, -2.86, p.z, Math.PI / 2);
     else props.portrait(p, 1.86, p.z, -Math.PI / 2);
@@ -195,11 +206,21 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
   props.dresser(4.2, 1.38, 0);
   props.dogBed(3.1, 7.7);
   props.floorLamp(9.3, 8.4);
-  props.plant(12.35, 8.35, 1);
+  props.plant(5.75, 1.45, 0.9);
   props.rug(6.6, 4.9, 4.2, 3.0, ['#e8eef7', '#7d9cc7', '#c76d7d']);
   props.crossStitch(12.86, 1.7, 5.2, -Math.PI / 2, ['NO PUKING', 'ON THE BED']);
 
   const trashCans = TRASH_CANS.map(([x, z]) => props.trashCan(x, z));
+
+  // Bathrooms. Every toilet has a bidet.
+  const toilets = TOILETS.map((t) => props.toilet(t.x, t.z, t.rot));
+  props.vanity(-5.2, 0.86, 0);
+  props.vanity(11.4, 6.96, 0);
+  props.towelRack(-5.86, 1.35, 2.2, Math.PI / 2, 0xff8fb1);
+  props.towelRack(12.4, 1.35, 6.74, 0, 0x5dade2);
+  const bidetNote = ['EVERY TOILET IN', 'THIS HOUSE HAS', 'A BIDET.', "YOU'RE WELCOME.", '— E'];
+  props.framedNote(-3.78, 1.6, 0.64, 0, bidetNote, 0.62, 0.62, '#e8f6f3', '#1a5e57', 50);
+  props.framedNote(12.86, 1.6, 8.15, -Math.PI / 2, bidetNote, 0.62, 0.62, '#e8f6f3', '#1a5e57', 50);
 
   for (const occ of props.occluders) {
     const o: Occluder = { object: occ, materials: [], box: new THREE.Box3(), opacity: 1 };
@@ -272,6 +293,7 @@ export function buildHouse(scene: THREE.Scene, quality: 'fancy' | 'fast'): House
     tv,
     microwave,
     trashCans,
+    toilets,
     update(dt, time) {
       for (const a of animated) a.update(dt, time);
       tvLight.intensity = 3 + Math.sin(time * 13) * 0.6 + Math.sin(time * 5.3) * 0.8;
@@ -288,13 +310,25 @@ function exteriorSide(wall: WallDef): string {
 
 function solidIntervals(wall: WallDef): [number, number][] {
   const doors = [...(wall.doors ?? [])].sort((a, b) => a[0] - b[0]);
-  const out: [number, number][] = [];
+  const spans: [number, number][] = [];
   let cursor = wall.from;
   for (const [d0, d1] of doors) {
-    if (d0 > cursor) out.push([cursor, d0]);
+    if (d0 > cursor) spans.push([cursor, d0]);
     cursor = d1;
   }
-  if (cursor < wall.to) out.push([cursor, wall.to]);
+  if (cursor < wall.to) spans.push([cursor, wall.to]);
+  // Break at room boundaries so each piece faces a single room on each side.
+  const out: [number, number][] = [];
+  for (const [a, b] of spans) {
+    let start = a;
+    for (const split of [...(wall.splits ?? [])].sort((x, y) => x - y)) {
+      if (split > start + 0.05 && split < b - 0.05) {
+        out.push([start, split]);
+        start = split;
+      }
+    }
+    out.push([start, b]);
+  }
   return out;
 }
 
